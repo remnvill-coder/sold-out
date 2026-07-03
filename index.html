@@ -73,7 +73,7 @@ let scanner = null;
 let isScanning = false;
 let currentSINo = "";   // ✅ SESSION SI NO
 
-const API_URL = "https://script.google.com/macros/s/AKfycby1RkirURkUctBsqfsNc1VD93I8ejToUBSDz_-QUua1J_QVgtFWr0qCjNMR1l4O8ExTbA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbx0p6T7MS6QAoG5Q8dFXbBS2RAsUwzd9kawJltUWP568A0a6XMfB4d0ShqlGW7XQq6egg/exec";
 
 async function startScan() {
 
@@ -168,7 +168,7 @@ async function startScan() {
 
                         result.innerHTML =
                             "<span style='color:red;font-size:24px;font-weight:bold;'>⚠ ALREADY SCANNED</span><br><br>" +
-                            "<b>SI No:</b> " + currentSINo + "<br>" +
+                            "<b>SI No:</b> " + (data.siNo ?? "-") + "<br>" +
                             "<b>Barcode:</b> " + decodedText + "<br>" +
                             "<b>Lens type:</b> " + (data.colJ ?? "-") + "<br>" +
                             "<b>Grade:</b> " + (data.colO ?? "-");
@@ -179,7 +179,7 @@ async function startScan() {
 
                         result.innerHTML =
                             "<span style='color:green;font-size:24px;font-weight:bold;'>✅ SCANNED SUCCESSFULLY</span><br><br>" +
-                            "<b>SI No:</b> " + currentSINo + "<br>" +
+                           "<b>SI No:</b> " + (data.siNo ?? "-") + "<br>" +
                             "<b>Barcode:</b> " + decodedText + "<br>" +
                             "<b>Lens type:</b> " + (data.colJ ?? "-") + "<br>" +
                             "<b>Grade:</b> " + (data.colO ?? "-");
@@ -190,7 +190,7 @@ async function startScan() {
 
                         result.innerHTML =
                             "<span style='color:red;font-size:24px;font-weight:bold;'>❌ NOT FOUND</span><br><br>" +
-                            "<b>SI No:</b> " + currentSINo + "<br>" +
+                            "<b>SI No:</b> " + (data.siNo ?? "-") + "<br>" +
                             "<b>Barcode:</b> " + decodedText;
 
                     }
