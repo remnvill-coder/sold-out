@@ -180,14 +180,32 @@ const API_URL = "https://script.google.com/macros/s/AKfycbwuvZ1DnWNvJYUrwK5gZpac
 async function login() {
   const pass = document.getElementById("password").value;
 
-  const res = await fetch(API_URL + "?action=login&password=" + encodeURIComponent(pass));
-  const data = await res.json();
+  if (!pass) {
+    document.getElementById("loginStatus").innerText = "Enter password";
+    return;
+  }
 
-  if (data.status === "OK") {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("app").style.display = "block";
-  } else {
-    document.getElementById("loginStatus").innerText = "❌ Wrong password";
+  const statusEl = document.getElementById("loginStatus");
+
+  // FORCE UI UPDATE BEFORE FETCH
+  statusEl.innerText = "Checking...";
+
+  // small delay so browser renders text
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  try {
+    const res = await fetch(API_URL + "?action=login&password=" + encodeURIComponent(pass));
+    const data = await res.json();
+
+    if (data.status === "OK") {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("app").style.display = "block";
+    } else {
+      statusEl.innerText = "❌ Wrong password";
+    }
+
+  } catch (err) {
+    statusEl.innerText = "Server error";
   }
 }
 
