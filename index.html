@@ -59,10 +59,7 @@ input {
     margin-top: 12px;
 }
 
-/* ===================== */
-/* ✨ UPGRADED BUTTONS */
-/* ===================== */
-
+/* BUTTONS */
 button {
     padding: 14px;
     width: 100%;
@@ -72,40 +69,26 @@ button {
     font-weight: bold;
     cursor: pointer;
     transition: all 0.25s ease;
-    transform: translateY(0);
     box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
-/* HOVER EFFECT */
 button:hover {
     transform: translateY(-3px);
     box-shadow: 0 10px 18px rgba(0,0,0,0.18);
 }
 
-/* CLICK EFFECT */
 button:active {
     transform: translateY(1px) scale(0.98);
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
 
-/* BLUE BUTTON */
 .btn-blue {
     background: linear-gradient(135deg, #2196f3, #1976d2);
     color: white;
 }
 
-.btn-blue:hover {
-    filter: brightness(1.1);
-}
-
-/* ORANGE BUTTON */
 .btn-orange {
     background: linear-gradient(135deg, #ff7043, #ff5722);
     color: white;
-}
-
-.btn-orange:hover {
-    filter: brightness(1.1);
 }
 
 /* CARD */
@@ -135,7 +118,7 @@ button:active {
 
     <input id="siNo" placeholder="Enter SI No">
 
-    <button class="btn-blue" onclick="startScan()">📷 START SCAN</button>
+    <button id="scanBtn" class="btn-blue" onclick="toggleScan()">📷 START SCAN</button>
     <button class="btn-blue" onclick="searchSI()">🔍 SEARCH SI</button>
     <button class="btn-orange" onclick="refreshPage()">♻ REFRESH</button>
 
@@ -153,52 +136,53 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-/* AUDIO */
-let audioCtx = null;
+const API_URL = "https://script.google.com/macros/s/AKfycbzwKbZLvJWvrJ351Aedk__8opY1O7XC4SI_H7ZTZCs4z-IlcU4mz9NhRbabqqD_sI6jZQ/exec";
 
-function initAudio() {
-    if (!audioCtx) {
-        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+/* ================= UI TOGGLE ================= */
+
+function setUIScanning(state) {
+    const btn = document.getElementById("scanBtn");
+    const siBox = document.getElementById("siNo");
+    const reader = document.getElementById("reader");
+
+    if (state) {
+        btn.innerHTML = "⛔ STOP SCANNING";
+        siBox.disabled = true;
+        reader.style.display = "block";
+    } else {
+        btn.innerHTML = "📷 START SCAN";
+        siBox.disabled = false;
+        reader.style.display = "none";
     }
 }
 
-function beep() {
-    initAudio();
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
+/* ================= TOGGLE SCAN ================= */
 
-    osc.type = "square";
-    osc.frequency.value = 900;
-    gain.gain.value = 0.15;
-
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.12);
-}
-
-function vibrate() {
-    if (navigator.vibrate) navigator.vibrate([150,80,150]);
-}
-
-document.addEventListener("click", initAudio, { once: true });
-
-const API_URL = "https://script.google.com/macros/s/AKfycbzwKbZLvJWvrJ351Aedk__8opY1O7XC4SI_H7ZTZCs4z-IlcU4mz9NhRbabqqD_sI6jZQ/exec";
-
-/* RESET */
-function clearUI() {
-    document.getElementById("result").innerHTML = "Ready";
-    document.getElementById("searchResult").innerHTML = "";
-}
-
-/* SCAN */
-async function startScan() {
-
-    clearUI();
+async function toggleScan() {
 
     const siNo = document.getElementById("siNo").value;
     if (!siNo) return alert("Enter SI No");
+
+    // STOP SCAN
+    if (isScanning) {
+
+        isScanning = false;
+        setUIScanning(false);
+
+        if (scanner) {
+            await scanner.stop();
+            await scanner.clear();
+            scanner = null;
+        }
+
+        return;
+    }
+
+    // START SCAN
+    clearUI();
+
+    isScanning = true;
+    setUIScanning(true);
 
     const devices = await Html5Qrcode.getCameras();
 
@@ -218,12 +202,14 @@ async function startScan() {
         { fps: 10, qrbox: 250 },
         async (code) => {
 
-            if (isScanning) return;
-            isScanning = true;
+            if (!isScanning) return;
+            isScanning = false;
 
             await scanner.stop();
             await scanner.clear();
             scanner = null;
+
+            setUIScanning(false);
 
             beep();
             vibrate();
@@ -282,13 +268,12 @@ async function startScan() {
                     </div>
                 `;
             }
-
-            isScanning = false;
         }
     );
 }
 
-/* SAVE */
+/* ================= SAVE ================= */
+
 async function saveYes() {
 
     if (isSaving) return;
@@ -319,7 +304,8 @@ async function saveYes() {
     isSaving = false;
 }
 
-/* SEARCH */
+/* ================= SEARCH ================= */
+
 async function searchSI() {
 
     clearUI();
@@ -348,16 +334,52 @@ async function searchSI() {
     `).join("");
 }
 
-/* CANCEL */
+/* ================= UTIL ================= */
+
+function clearUI() {
+    document.getElementById("result").innerHTML = "Ready";
+    document.getElementById("searchResult").innerHTML = "";
+}
+
 function cancelNo() {
     document.getElementById("result").innerHTML = "❌ CANCELLED";
 }
 
-/* REFRESH */
 function refreshPage() {
     document.getElementById("siNo").value = "";
     clearUI();
 }
+
+/* AUDIO */
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function beep() {
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = "square";
+    osc.frequency.value = 900;
+    gain.gain.value = 0.15;
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.12);
+}
+
+function vibrate() {
+    if (navigator.vibrate) navigator.vibrate([150,80,150]);
+}
+
+document.addEventListener("click", initAudio, { once: true });
 
 </script>
 
