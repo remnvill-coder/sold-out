@@ -13,6 +13,19 @@ body {
     background: #eef2f7;
 }
 
+/* LOGIN SCREEN */
+#loginScreen {
+    position: fixed;
+    inset: 0;
+    background: black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+    color: white;
+}
+
 /* HEADER */
 .header {
     display: flex;
@@ -107,6 +120,14 @@ button:active {
 
 <body>
 
+<!-- 🔐 LOGIN SCREEN -->
+<div id="loginScreen">
+    <h3>ENTER PASSWORD</h3>
+    <input type="password" id="pass">
+    <button onclick="checkPass()">LOGIN</button>
+    <p id="error" style="color:red;"></p>
+</div>
+
 <div class="header">
     <img src="https://drive.google.com/thumbnail?id=1tOeVr8yecFf_REL9zHznEh9Qs2clqVrt&sz=w200">
     <h3 style="margin:0;">SCAN ITEM SYSTEM</h3>
@@ -129,6 +150,20 @@ button:active {
 
 <script>
 
+/* ================= PASSWORD ================= */
+
+function checkPass() {
+    const pass = document.getElementById("pass").value;
+
+    if (pass === "1234") {
+        document.getElementById("loginScreen").style.display = "none";
+    } else {
+        document.getElementById("error").innerText = "Wrong password";
+    }
+}
+
+/* ================= VARIABLES ================= */
+
 let scanner = null;
 let isScanning = false;
 let isSaving = false;
@@ -136,7 +171,7 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzwKbZLvJWvrJ351Aedk__8opY1O7XC4SI_H7ZTZCs4z-IlcU4mz9NhRbabqqD_sI6jZQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyw6FHI5sRAxjzwx66Tk0leF6GFn5LUV0PehjypWNPbOlKurDPAYDfNq3rOQcBdpwXliA/exec";
 
 /* ================= UI TOGGLE ================= */
 
@@ -163,7 +198,6 @@ async function toggleScan() {
     const siNo = document.getElementById("siNo").value;
     if (!siNo) return alert("Enter SI No");
 
-    // STOP SCAN
     if (isScanning) {
 
         isScanning = false;
@@ -178,7 +212,6 @@ async function toggleScan() {
         return;
     }
 
-    // START SCAN
     clearUI();
 
     isScanning = true;
@@ -218,7 +251,7 @@ async function toggleScan() {
             tempSi = siNo;
 
             const res = await fetch(API_URL +
-                "?action=check&barcode=" + encodeURIComponent(code));
+                "&action=check&barcode=" + encodeURIComponent(code));
 
             const data = await res.json();
 
@@ -283,21 +316,14 @@ async function saveYes() {
     document.getElementById("result").innerHTML = "⏳ Saving...";
 
     const res = await fetch(API_URL +
-        "?action=save&barcode=" + encodeURIComponent(tempCode) +
+        "&action=save&barcode=" + encodeURIComponent(tempCode) +
         "&siNo=" + encodeURIComponent(tempSi));
 
     const data = await res.json();
 
-    let row = data.row || [];
-    let colJ = data.colJ || row?.[9] || "";
-    let colO = data.colO || row?.[14] || "";
-
     document.getElementById("result").innerHTML = `
         <div class="card green">
-            ✅ ${data.status}<br><br>
-            <b>${colO}</b><br>
-            <b>${tempCode}</b><br>
-            ${colJ ? `<small>${colJ}</small>` : ""}
+            ✅ ${data.status}
         </div>
     `;
 
@@ -313,7 +339,7 @@ async function searchSI() {
     const siNo = document.getElementById("siNo").value;
 
     const res = await fetch(API_URL +
-        "?action=searchSI&siNo=" + encodeURIComponent(siNo));
+        "&action=searchSI&siNo=" + encodeURIComponent(siNo));
 
     const data = await res.json();
 
@@ -350,7 +376,8 @@ function refreshPage() {
     clearUI();
 }
 
-/* AUDIO */
+/* ================= AUDIO ================= */
+
 let audioCtx = null;
 
 function initAudio() {
