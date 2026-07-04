@@ -66,69 +66,135 @@ let isScanning = false;
 const API_URL = "https://script.google.com/macros/s/AKfycbyE6rAFE7Q1f3wkAEnNdiI17pW51CQLsM6TtHXzSU5Nk6t5QadWmA9ZXkUOPciXerG5/exec";
 
 
-// ================= SCAN =================
+// =========================
+// START SCAN (FIXED CAMERA)
+// =========================
 async function startScan() {
 
     const siNo = document.getElementById("siNo").value.trim();
     const result = document.getElementById("result");
 
-    if (!siNo) return result.innerHTML = "⚠ Enter SI No";
+    if (!siNo) {
+        result.innerHTML = "⚠ Enter SI No";
+        return;
+    }
 
-    if (scanner) { await scanner.stop(); scanner.clear(); scanner = null; }
+    if (scanner) {
+        try {
+            await scanner.stop();
+            await scanner.clear();
+        } catch (e) {}
+        scanner = null;
+    }
 
-    const devices = await Html5Qrcode.getCameras();
-    const cam = devices[0].id;
+    try {
 
-    scanner = new Html5Qrcode("reader");
+        const devices = await Html5Qrcode.getCameras();
 
-    scanner.start(cam, { fps: 10, qrbox: 250 }, async (code) => {
-
-        if (isScanning) return;
-        isScanning = true;
-
-        const res = await fetch(API_URL + "?barcode=" + code + "&siNo=" + siNo);
-        const data = await res.json();
-
-        let lens = data.colJ;
-        let desc = data.colO;
-
-        let details = "";
-
-        if (lens && lens.trim() !== "") {
-            details = `Lens: ${lens}<br>Description: ${desc}`;
-        } else {
-            details = `Description: ${desc}`;
+        if (!devices.length) {
+            result.innerHTML = "No camera found ❌";
+            return;
         }
 
-        let time = data.timestamp ? new Date(data.timestamp).toLocaleString() : "";
+        let cameraId = null;
 
-        if (data.status === "DUPLICATE") {
-            result.innerHTML = `⚠ DUPLICATE<br>${details}<br>SI: ${data.siNo}<br>${time}`;
+        // ✅ FIND BACK CAMERA
+        for (let device of devices) {
+            const label = (device.label || "").toLowerCase();
+
+            if (
+                label.includes("back") ||
+                label.includes("rear") ||
+                label.includes("environment")
+            ) {
+                cameraId = device.id;
+                break;
+            }
         }
-        else if (data.status === "FOUND") {
-            result.innerHTML = `✅ SCANNED<br>${details}<br>${time}`;
+
+        // ✅ FALLBACK CAMERA
+        if (!cameraId) {
+            cameraId = devices[devices.length - 1].id;
         }
-        else {
-            result.innerHTML = "❌ NOT FOUND";
-        }
 
-        isScanning = false;
+        scanner = new Html5Qrcode("reader");
 
-    });
+        await scanner.start(
+            cameraId,
+            { fps: 10, qrbox: 250 },
 
+            async (code) => {
+
+                if (isScanning) return;
+                isScanning = true;
+
+                result.innerHTML = "Processing...";
+
+                const res = await fetch(
+                    API_URL + "?barcode=" + code + "&siNo=" + siNo
+                );
+
+                const data = await res.json();
+
+                let lens = data.colJ;
+                let desc = data.colO;
+
+                let details = "";
+
+                if (lens && lens.trim() !== "") {
+                    details = `Lens: ${lens}<br>Description: ${desc}`;
+                } else {
+                    details = `Description: ${desc}`;
+                }
+
+                let time = data.timestamp
+                    ? new Date(data.timestamp).toLocaleString()
+                    : "";
+
+                if (data.status === "DUPLICATE") {
+                    result.innerHTML =
+                        `⚠ DUPLICATE<br>${details}<br>SI: ${data.siNo}<br>${time}`;
+                }
+                else if (data.status === "FOUND") {
+                    result.innerHTML =
+                        `✅ SCANNED<br>${details}<br>${time}`;
+                }
+                else {
+                    result.innerHTML = "❌ NOT FOUND";
+                }
+
+                isScanning = false;
+            }
+        );
+
+    } catch (err) {
+        result.innerHTML = "Camera error ❌";
+    }
 }
 
 
-// ================= SEARCH =================
+// =========================
+// SEARCH SI NO
+// =========================
 async function searchSI() {
 
     const siNo = document.getElementById("siNo").value;
     const out = document.getElementById("searchResult");
 
+    if (!siNo) {
+        out.innerHTML = "⚠ Enter SI No";
+        return;
+    }
+
+    out.innerHTML = "Searching...";
+
     const res = await fetch(API_URL + "?action=searchSI&siNo=" + siNo);
     const data = await res.json();
 
-    if (!data.items.length) return out.innerHTML = "No results";
+    if (!data.items.length) {
+        out.innerHTML = "No results found";
+        return;
+    }
 
     let html = `<b>SI:</b> ${siNo}<br><br>`;
 
@@ -137,12 +203,12 @@ async function searchSI() {
         let lens = i.lens;
         let desc = i.grade;
 
-        html += `<div style="border:1px solid #ccc;padding:8px;margin:5px;">
-        #${index+1}<br>`;
-
-        if (lens) html += `Lens: ${lens}<br>`;
-        html += `Description: ${desc}<br>
-        Barcode: ${i.barcode}
+        html += `
+        <div style="border:1px solid #ccc;padding:10px;margin:5px;">
+            <b>#${index + 1}</b><br>
+            ${lens ? "Lens: " + lens + "<br>" : ""}
+            Description: ${desc}<br>
+            Barcode: ${i.barcode}
         </div>`;
     });
 
@@ -150,15 +216,22 @@ async function searchSI() {
 }
 
 
-// ================= REFRESH =================
+// =========================
+// REFRESH
+// =========================
 function refreshPage() {
+
     document.getElementById("siNo").value = "";
     document.getElementById("result").innerHTML = "Ready";
     document.getElementById("searchResult").innerHTML = "";
 
+    isScanning = false;
+
     if (scanner) {
-        scanner.stop();
-        scanner.clear();
+        try {
+            scanner.stop();
+            scanner.clear();
+        } catch (e) {}
         scanner = null;
     }
 }
