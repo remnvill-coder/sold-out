@@ -33,6 +33,16 @@ button {
     margin-top: 15px;
     font-weight: bold;
 }
+
+.card {
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.green { background: #d4f8d4; border: 2px solid green; }
+
+.red { background: #ffd6d6; border: 2px solid red; }
 </style>
 </head>
 
@@ -52,6 +62,11 @@ style="padding:12px;width:85%;">
 <p id="result">Ready</p>
 <div id="searchResult"></div>
 
+<!-- 🔊 BEEP SOUND -->
+<audio id="beepSound"
+src="https://www.soundjay.com/button/beep-07.wav"
+preload="auto"></audio>
+
 <script>
 
 let scanner = null;
@@ -61,6 +76,20 @@ const API_URL = "https://script.google.com/macros/s/AKfycbzjgBdfyMyF08wwqIWYcHzH
 
 function getResult() {
     return document.getElementById("result");
+}
+
+// ================= BEEP =================
+function playBeep() {
+    const beep = document.getElementById("beepSound");
+    beep.currentTime = 0;
+    beep.play();
+}
+
+// ================= VIBRATION =================
+function vibrateDevice() {
+    if (navigator.vibrate) {
+        navigator.vibrate(200);
+    }
 }
 
 
@@ -84,12 +113,6 @@ async function startScan() {
     }
 
     const devices = await Html5Qrcode.getCameras();
-
-    if (!devices.length) {
-        result.innerHTML = "No camera found ❌";
-        return;
-    }
-
     const cameraId = devices[devices.length - 1].id;
 
     scanner = new Html5Qrcode("reader");
@@ -103,20 +126,69 @@ async function startScan() {
             if (isScanning) return;
             isScanning = true;
 
-            try {
-                await scanner.stop();
-                await scanner.clear();
-                scanner = null;
-            } catch (e) {}
+            await scanner.stop();
+            await scanner.clear();
+            scanner = null;
+
+            playBeep();        // 🔊 SOUND
+            vibrateDevice();   // 📳 VIBRATION
 
             const safeCode = encodeURIComponent(code);
             const safeSi = encodeURIComponent(siNo);
 
-            getResult().innerHTML = `
-                ADD TO SOLD?<br><br>
-                <button onclick="confirmSave('${safeCode}','${safeSi}',true)">YES</button>
-                <button onclick="confirmSave('${safeCode}','${safeSi}',false)" style="background:red;">NO</button>
-            `;
+            const res = await fetch(API_URL + "?barcode=" + safeCode + "&siNo=" + safeSi);
+            const data = await res.json();
+
+            let lens = data.colJ || "";
+            let desc = data.colO || "";
+
+            let details = lens
+                ? `<b>Lens:</b> ${lens}<br><b>Description:</b> ${desc}`
+                : `<b>Description:</b> ${desc}`;
+
+            // ================= FOUND =================
+            if (data.status === "FOUND") {
+
+                result.innerHTML = `
+                    <div class="card green">
+                        ✅ FOUND<br><br>
+                        ${details}<br><br>
+                        <button id="yesBtn"
+                            onclick="confirmSave('${safeCode}','${safeSi}',true)">
+                            YES
+                        </button>
+                        <button onclick="confirmSave('${safeCode}','${safeSi}',false)"
+                            style="background:red;">
+                            NO
+                        </button>
+                    </div>
+                `;
+
+                // 🔥 AUTO FOCUS YES BUTTON
+                setTimeout(() => {
+                    document.getElementById("yesBtn").focus();
+                }, 100);
+
+            }
+
+            // ================= DUPLICATE =================
+            else if (data.status === "DUPLICATE") {
+
+                result.innerHTML = `
+                    <div class="card red">
+                        ⚠ DUPLICATE<br><br>
+                        ${details}<br><br>
+                        <button onclick="confirmSave('${safeCode}','${safeSi}',false)">
+                            OK
+                        </button>
+                    </div>
+                `;
+            }
+
+            // ================= NOT FOUND =================
+            else {
+                result.innerHTML = "❌ NOT FOUND";
+            }
 
             isScanning = false;
         }
@@ -124,7 +196,7 @@ async function startScan() {
 }
 
 
-// ================= CONFIRM =================
+// ================= CONFIRM SAVE =================
 async function confirmSave(code, siNo, ok) {
 
     const result = getResult();
@@ -137,22 +209,24 @@ async function confirmSave(code, siNo, ok) {
     const res = await fetch(API_URL + "?barcode=" + code + "&siNo=" + siNo);
     const data = await res.json();
 
-    let lens = data.colJ;
-    let desc = data.colO;
+    let lens = data.colJ || "";
+    let desc = data.colO || "";
 
-    let details = lens ? `Lens: ${lens}<br>${desc}` : `Description: ${desc}`;
+    let details = lens
+        ? `Lens: ${lens}<br>Description: ${desc}`
+        : `Description: ${desc}`;
 
-    let time = data.timestamp ? new Date(data.timestamp).toLocaleString() : "";
+    let time = data.timestamp
+        ? new Date(data.timestamp).toLocaleString()
+        : "";
 
-    if (data.status === "DUPLICATE") {
-        result.innerHTML = `⚠ DUPLICATE<br>${details}<br>${time}`;
-    }
-    else if (data.status === "FOUND") {
-        result.innerHTML = `✅ SAVED<br>${details}<br>${time}`;
-    }
-    else {
-        result.innerHTML = "❌ NOT FOUND";
-    }
+    result.innerHTML = `
+        <div class="card green">
+            ✅ SAVED<br><br>
+            ${details}<br><br>
+            ${time}
+        </div>
+    `;
 }
 
 
