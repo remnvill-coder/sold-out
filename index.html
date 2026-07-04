@@ -166,121 +166,66 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-let cameraList = [];
-let currentCameraIndex = 0;
-let currentCameraId = null;
-
 const API_URL = "https://script.google.com/macros/s/AKfycbwuvZ1DnWNvJYUrwK5gZpacEp5R1iwR19O-Ga70cKea_R03hd8yhiyY7J_HnjdTj0js3w/exec";
 
-/* ================= LOGIN (UNCHANGED) ================= */
+/* ================= LOGIN ================= */
 async function login() {
   const pass = document.getElementById("password").value;
 
-  const res = await fetch(API_URL + "?action=login&password=" + encodeURIComponent(pass));
-  const data = await res.json();
-
-  if (data.status === "OK") {
-    document.getElementById("loginScreen").style.display = "none";
-    document.getElementById("app").style.display = "block";
-  } else {
-    document.getElementById("loginStatus").innerText = "❌ Wrong password";
-  }
-}
-
-/* ================= START SCANNER ================= */
-async function startScanner(cameraId) {
-  scanner = new Html5Qrcode("reader");
-
-  await scanner.start(
-    cameraId,
-    { fps: 10, qrbox: 250 },
-    async (code) => onScan(code)
-  );
-
-  currentCameraId = cameraId;
-}
-
-/* ================= SWITCH CAMERA (FIXED) ================= */
-async function switchCamera() {
-  if (!cameraList.length) {
-    alert("Start scanner first");
+  if (!pass) {
+    document.getElementById("loginStatus").innerText = "Enter password";
     return;
   }
 
-  if (!scanner) {
-    alert("Scanner not active");
-    return;
+  document.getElementById("loginStatus").innerText = "Checking...";
+
+  try {
+    const res = await fetch(API_URL + "?action=login&password=" + encodeURIComponent(pass));
+    const data = await res.json();
+
+    if (data.status === "OK") {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("app").style.display = "block";
+    } else {
+      document.getElementById("loginStatus").innerText = "❌ Wrong password";
+    }
+
+  } catch (err) {
+    document.getElementById("loginStatus").innerText = "Server error";
   }
-
-  await scanner.stop();
-  await scanner.clear();
-  scanner = null;
-
-  currentCameraIndex = (currentCameraIndex + 1) % cameraList.length;
-
-  const nextCameraId = cameraList[currentCameraIndex].id;
-  startScanner(nextCameraId);
 }
 
-/* ================= ON SCAN ================= */
-async function onScan(code) {
 
-  if (!isScanning) return;
+function setUIScanning(state) {
+  const btn = document.getElementById("scanBtn");
+  const siBox = document.getElementById("siNo");
+  const reader = document.getElementById("reader");
+  const refreshBtn = document.querySelector(".btn-orange");
 
-  isScanning = false;
-  await scanner.stop();
-  await scanner.clear();
-  scanner = null;
-
-  beep();
-  vibrate();
-
-  tempCode = code;
-  tempSi = document.getElementById("siNo").value;
-
-  const res = await fetch(API_URL + "?action=check&barcode=" + encodeURIComponent(code));
-  const data = await res.json();
-
-  let row = data.row || [];
-  let colJ = row?.[9] || "";
-  let colO = row?.[14] || "";
-
-  if (data.status === "FOUND") {
-    document.getElementById("result").innerHTML = `
-      <div class="card green">
-        ✅ AVAILABLE<br><br>
-        <b>${colO}</b><br>
-        <b>${code}</b><br>
-        <small>${colJ}</small><br>
-        <button id="saveBtn" class="btn-blue" onclick="saveYes()">ADD TO SOLD</button>
-        <button class="btn-orange" onclick="cancelNo()">CANCEL</button>
-      </div>
-    `;
-  } else if (data.status === "DUPLICATE") {
-    document.getElementById("result").innerHTML = `
-      <div class="card red">
-        ⚠ ALREADY SOLD<br><br>
-        <b>${colO}</b><br>
-        <b>${code}</b><br>
-      </div>
-    `;
+  if (state) {
+    btn.innerHTML = "⛔ STOP SCANNING";
+    siBox.disabled = true;
+    reader.style.display = "block";
+    refreshBtn.disabled = true;
+    refreshBtn.style.opacity = "0.5";
   } else {
-    document.getElementById("result").innerHTML = `
-      <div class="card red">
-        ❌ NOT FOUND<br><br>
-        <b>${colO}</b><br>
-      </div>
-    `;
+    btn.innerHTML = "📷 START SCAN";
+    siBox.disabled = false;
+    reader.style.display = "none";
+    refreshBtn.disabled = false;
+    refreshBtn.style.opacity = "1";
   }
 }
 
-/* ================= TOGGLE SCAN ================= */
+
+
 async function toggleScan() {
   const siNo = document.getElementById("siNo").value;
   if (!siNo) return alert("Enter SI No");
 
   if (isScanning) {
     isScanning = false;
+    setUIScanning(false);
     if (scanner) {
       await scanner.stop();
       await scanner.clear();
@@ -291,43 +236,114 @@ async function toggleScan() {
 
   clearUI();
   isScanning = true;
+  setUIScanning(true);
 
-  cameraList = await Html5Qrcode.getCameras();
+  const devices = await Html5Qrcode.getCameras();
+  let cameraId = devices[0].id;
 
-  if (!cameraList.length) {
-    alert("No camera found");
-    return;
-  }
-
-  // default camera (back camera if possible)
-  let defaultIndex = 0;
-
-  for (let i = 0; i < cameraList.length; i++) {
-    const label = (cameraList[i].label || "").toLowerCase();
+  for (let d of devices) {
+    const label = (d.label || "").toLowerCase();
     if (label.includes("back") || label.includes("rear")) {
-      defaultIndex = i;
+      cameraId = d.id;
       break;
     }
   }
 
-  currentCameraIndex = defaultIndex;
+  scanner = new Html5Qrcode("reader");
 
-  startScanner(cameraList[currentCameraIndex].id);
+  await scanner.start(
+    cameraId,
+    { fps: 10, qrbox: 250 },
+    async (code) => {
+
+      if (!isScanning) return;
+
+      isScanning = false;
+      await scanner.stop();
+      await scanner.clear();
+      scanner = null;
+      setUIScanning(false);
+
+      beep();
+      vibrate();
+
+      tempCode = code;
+      tempSi = siNo;
+
+      const res = await fetch(API_URL + "?action=check&barcode=" + encodeURIComponent(code));
+      const data = await res.json();
+
+      let row = data.row || [];
+      let colJ = data.colJ || row?.[9] || "";
+      let colO = data.colO || row?.[14] || "";
+
+      if (data.status === "FOUND") {
+        document.getElementById("result").innerHTML = `
+          <div class="card green">
+            ✅ AVAILABLE<br><br>
+            <b>${colO}</b><br>
+            <b>${code}</b><br>
+            ${colJ ? `<small>${colJ}</small><br>` : ""}
+            <br>
+            <button id="saveBtn" class="btn-blue" onclick="saveYes()">ADD TO SOLD</button>
+            <button class="btn-orange" onclick="cancelNo()">CANCEL</button>
+          </div>
+        `;
+      }
+
+      else if (data.status === "DUPLICATE") {
+        document.getElementById("result").innerHTML = `
+          <div class="card red">
+            ⚠ ALREADY SOLD<br><br>
+            <b>${colO}</b><br>
+            <b>${code}</b><br>
+            ${colJ ? `<small>${colJ}</small>` : ""}
+          </div>
+        `;
+      }
+
+      else {
+        document.getElementById("result").innerHTML = `
+          <div class="card red">
+            ❌ NOT FOUND<br><br>
+            <b>${colO}</b><br>
+            ${colJ ? `<small>${colJ}</small>` : ""}
+          </div>
+        `;
+      }
+    }
+  );
 }
 
-/* ================= SAVE (UNCHANGED) ================= */
 async function saveYes() {
+  if (isSaving) return;
+  isSaving = true;
+
+  document.getElementById("saveBtn").disabled = true;
+  document.getElementById("result").innerHTML = "⏳ Saving...";
+
   const res = await fetch(API_URL +
     "?action=save&barcode=" + encodeURIComponent(tempCode) +
     "&siNo=" + encodeURIComponent(tempSi));
 
   const data = await res.json();
 
-  document.getElementById("result").innerHTML =
-    `<div class="card green">✅ ${data.status}</div>`;
+  let row = data.row || [];
+  let colJ = data.colJ || row?.[9] || "";
+  let colO = data.colO || row?.[14] || "";
+
+  document.getElementById("result").innerHTML = `
+    <div class="card green">
+      ✅ ${data.status}<br><br>
+      <b>${colO}</b><br>
+      <b>${tempCode}</b><br>
+      ${colJ ? `<small>${colJ}</small>` : ""}
+    </div>
+  `;
+
+  isSaving = false;
 }
 
-/* ================= SEARCH (UNCHANGED) ================= */
 async function searchSI() {
   clearUI();
 
@@ -346,13 +362,15 @@ async function searchSI() {
   out.innerHTML = data.items.map((item, idx) => `
     <div class="card">
       #${idx + 1}<br>
-      <b>${item.barcode}</b><br>
-      <small>${item.colJ}</small>
+      <b>${item.colO}</b><br>
+      ${item.colJ ? `<small>${item.colJ}</small><br>` : ""}
+      ${item.barcode}
     </div>
   `).join("");
 }
 
-/* ================= UTIL (UNCHANGED) ================= */
+/* ================= UTIL ================= */
+
 function clearUI() {
   document.getElementById("result").innerHTML = "Ready";
   document.getElementById("searchResult").innerHTML = "";
@@ -367,7 +385,8 @@ function refreshPage() {
   clearUI();
 }
 
-/* ================= AUDIO (UNCHANGED) ================= */
+
+
 let audioCtx = null;
 
 function initAudio() {
