@@ -49,7 +49,7 @@ button:disabled {
 
 <body>
 
-<h2>SCAN-MO-AKO</h2>
+<h2>SCAN ITEM QR</h2>
 
 <div id="reader"></div>
 
@@ -167,8 +167,8 @@ async function startScan() {
                     if (data.status === "DUPLICATE") {
 
                         result.innerHTML =
-                            "<span style='color:red;font-size:24px;font-weight:bold;'>⚠ ALREADY SCANNED</span><br><br>" +
-                           
+                            "<span style='color:red;font-size:24px;font-weight:bold;'>⚠ SOLD</span><br><br>" +
+                            "<b>SI No:</b> " + (data.siNo ?? "-") + "<br>" +
                             "<b>Barcode:</b> " + decodedText + "<br>" +
                             "<b>Lens type:</b> " + (data.colJ ?? "-") + "<br>" +
                             "<b>Grade:</b> " + (data.colO ?? "-");
@@ -178,8 +178,8 @@ async function startScan() {
                     else if (data.status === "FOUND") {
 
                         result.innerHTML =
-                            "<span style='color:green;font-size:24px;font-weight:bold;'>✅ SCANNED SUCCESSFULLY</span><br><br>" +
-                           "<b>SI No:</b> " + (data.siNo ?? "-") + "<br>" +
+                            "<span style='color:green;font-size:24px;font-weight:bold;'>✅ SOLD</span><br><br>" +
+                          
                             "<b>Barcode:</b> " + decodedText + "<br>" +
                             "<b>Lens type:</b> " + (data.colJ ?? "-") + "<br>" +
                             "<b>Grade:</b> " + (data.colO ?? "-");
