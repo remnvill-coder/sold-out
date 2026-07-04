@@ -119,9 +119,7 @@ button:active {
 
         <input id="password" type="password" placeholder="Enter Password">
 
-        <button class="btn-blue" onclick="login()">
-            🔒 LOGIN
-        </button>
+        <button class="btn-blue" onclick="login()">🔒 LOGIN</button>
 
         <p id="loginMsg"></p>
 
@@ -129,7 +127,7 @@ button:active {
 
 </div>
 
-<!-- MAIN APP -->
+<!-- APP -->
 <div id="app" style="display:none;">
 
 <div class="header">
@@ -156,7 +154,7 @@ button:active {
 
 <script>
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyS-reVDa_CGINpywS52XpBi6lVS0Nm2jTeI0hyOUg8EdwTB-AWcS1a26jBmQ0MftE_4A/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxe_g2u81yTaUeS462X2LulIEwpK8O7HQeou7RagvpmYTgv3_ocLLxaLgw68hyjTyhRWQ/exec";
 
 /* ================= LOGIN ================= */
 async function login() {
@@ -164,37 +162,64 @@ async function login() {
     const pass = document.getElementById("password").value;
 
     const res = await fetch(
-        API_URL +
-        "?action=login&password=" +
-        encodeURIComponent(pass)
+        API_URL + "?action=login&password=" + encodeURIComponent(pass)
     );
 
     const data = await res.json();
 
     if (data.status === "SUCCESS") {
-
         document.getElementById("loginScreen").style.display = "none";
         document.getElementById("app").style.display = "block";
-
     } else {
-
         document.getElementById("loginMsg").innerHTML =
             "<span style='color:red'>Wrong Password</span>";
     }
 }
 
-/* ================= YOUR ORIGINAL CODE ================= */
+/* ================= SOUND SYSTEM ================= */
+
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function beep() {
+    initAudio();
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = "square";
+    osc.frequency.value = 900;
+    gain.gain.value = 0.15;
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.12);
+}
+
+function vibrate() {
+    if (navigator.vibrate) {
+        navigator.vibrate([150, 80, 150]);
+    }
+}
+
+document.addEventListener("click", initAudio, { once: true });
+
+/* ================= SCANNER ================= */
 
 let scanner = null;
 let isScanning = false;
-let isSaving = false;
-
 let tempCode = "";
 let tempSi = "";
 
-/* (KEEP ALL YOUR FUNCTIONS BELOW EXACTLY SAME) */
-
 function setUIScanning(state) {
+
     const btn = document.getElementById("scanBtn");
     const siBox = document.getElementById("siNo");
     const reader = document.getElementById("reader");
@@ -205,15 +230,11 @@ function setUIScanning(state) {
         siBox.disabled = true;
         reader.style.display = "block";
         refreshBtn.disabled = true;
-        refreshBtn.style.opacity = "0.5";
-        refreshBtn.style.cursor = "not-allowed";
     } else {
         btn.innerHTML = "📷 START SCAN";
         siBox.disabled = false;
         reader.style.display = "none";
         refreshBtn.disabled = false;
-        refreshBtn.style.opacity = "1";
-        refreshBtn.style.cursor = "pointer";
     }
 }
 
@@ -223,7 +244,6 @@ async function toggleScan() {
     if (!siNo) return alert("Enter SI No");
 
     if (isScanning) {
-
         isScanning = false;
         setUIScanning(false);
 
@@ -232,7 +252,6 @@ async function toggleScan() {
             await scanner.clear();
             scanner = null;
         }
-
         return;
     }
 
@@ -267,6 +286,10 @@ async function toggleScan() {
             scanner = null;
 
             setUIScanning(false);
+
+            /* 🔊 SOUND HERE */
+            beep();
+            vibrate();
 
             tempCode = code;
             tempSi = siNo;
