@@ -13,7 +13,6 @@ body {
     background: #f4f6f8;
 }
 
-/* ===== CAMERA BOX ===== */
 #reader {
     width: 100%;
     max-width: 350px;
@@ -22,7 +21,6 @@ body {
     overflow: hidden;
 }
 
-/* ===== INPUT ===== */
 input {
     padding: 12px;
     width: 85%;
@@ -31,7 +29,6 @@ input {
     border: 1px solid #ccc;
 }
 
-/* ===== COOL BUTTONS ===== */
 button {
     padding: 14px;
     width: 90%;
@@ -44,24 +41,20 @@ button {
     transition: 0.2s;
 }
 
-/* primary */
 .btn-blue {
     background: linear-gradient(135deg, #2196f3, #1976d2);
     color: white;
 }
 
-/* orange */
 .btn-orange {
     background: linear-gradient(135deg, #ff9800, #ff5722);
     color: white;
 }
 
-/* hover effect */
 button:hover {
     transform: scale(1.02);
 }
 
-/* ===== RESULT CARD ===== */
 .card {
     padding: 14px;
     border-radius: 12px;
@@ -99,24 +92,18 @@ button:hover {
 let scanner = null;
 let isScanning = false;
 
-// ================= CLEAN RESULT CONTROL =================
-function clearAllResults() {
-    document.getElementById("result").innerHTML = "Ready";
-    document.getElementById("searchResult").innerHTML = "";
-}
+let tempCode = "";
+let tempSi = "";
 
 // ================= AUDIO =================
 let audioCtx = null;
-let audioUnlocked = false;
-
 document.addEventListener("click", () => {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     audioCtx.resume();
-    audioUnlocked = true;
 }, { once: true });
 
-function playBeep() {
-    if (!audioCtx || !audioUnlocked) return;
+function beep() {
+    if (!audioCtx) return;
 
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
@@ -132,8 +119,8 @@ function playBeep() {
     osc.stop(audioCtx.currentTime + 0.12);
 }
 
-function vibrateDevice() {
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+function vibrate() {
+    if (navigator.vibrate) navigator.vibrate([200,100,200]);
 }
 
 const API_URL = "https://script.google.com/macros/s/AKfycbw8UojkaFiFqsXR1JQgnF1HLc3O3i95DgceH14S-9HyEU_848i4DIJzzaXPqIaXj3-08A/exec";
@@ -149,7 +136,6 @@ async function startScan() {
         return;
     }
 
-    // 🔥 CLEAN OLD SEARCH BEFORE SCAN
     document.getElementById("searchResult").innerHTML = "";
 
     if (scanner) {
@@ -162,62 +148,99 @@ async function startScan() {
 
     scanner = new Html5Qrcode("reader");
 
-    await scanner.start(
-        cameraId,
-        { fps: 10, qrbox: 250 },
+    await scanner.start(cameraId, { fps: 10, qrbox: 250 },
 
-        async (code) => {
+    async (code) => {
 
-            if (isScanning) return;
-            isScanning = true;
+        if (isScanning) return;
+        isScanning = true;
 
-            // 🔥 CLEAR SEARCH WHEN SCANNING
-            document.getElementById("searchResult").innerHTML = "";
+        await scanner.stop();
+        await scanner.clear();
+        scanner = null;
 
-            await scanner.stop();
-            await scanner.clear();
-            scanner = null;
+        beep();
+        vibrate();
 
-            playBeep();
-            vibrateDevice();
+        tempCode = code;
+        tempSi = siNo;
 
-            const res = await fetch(API_URL + "?barcode=" + encodeURIComponent(code) + "&siNo=" + encodeURIComponent(siNo));
-            const data = await res.json();
+        const res = await fetch(API_URL +
+            "?barcode=" + encodeURIComponent(code) +
+            "&siNo=" + encodeURIComponent(siNo));
 
-            let colM = data.colM || "";
-            let colJ = data.colJ || "";
-            let colO = data.colO || "";
+        const data = await res.json();
 
-            let details =
-                `<b>Col M:</b> ${colM}<br>` +
-                (colJ ? `<b>Lens:</b> ${colJ}<br>` : "") +
-                `<b>Description:</b> ${colO}`;
+        let colJ = data.colJ || "";
+        let colO = data.colO || "";
 
-            if (data.status === "FOUND") {
+        let details =
+            (colJ ? `<b>Lens:</b> ${colJ}<br>` : "") +
+            `<b>Description:</b> ${colO}`;
 
-                document.getElementById("result").innerHTML = `
-                    <div class="card green">
-                        ✅ FOUND<br><br>
-                        ${details}
-                    </div>`;
-            }
+        if (data.status === "FOUND") {
 
-            else if (data.status === "DUPLICATE") {
+            document.getElementById("result").innerHTML = `
+                <div class="card green">
+                    ✅ Available<br><br>
+                    ${details}<br><br>
 
-                document.getElementById("result").innerHTML = `
-                    <div class="card red">
-                        ⚠ DUPLICATE<br><br>
-                        ${details}
-                    </div>`;
-            }
+                    <button onclick="saveYes()" style="background:green;color:white;">
+                        YES SAVE
+                    </button>
 
-            else {
-                document.getElementById("result").innerHTML = "❌ NOT FOUND";
-            }
-
-            isScanning = false;
+                    <button onclick="cancelNo()" style="background:red;color:white;">
+                        NO
+                    </button>
+                </div>
+            `;
         }
-    );
+
+        else if (data.status === "DUPLICATE") {
+
+            document.getElementById("result").innerHTML = `
+                <div class="card red">
+                    ⚠ Already sold or Scanned<br><br>
+                    ${details}<br><br>
+
+                    <button onclick="cancelNo()" style="background:red;color:white;">
+                        OK
+                    </button>
+                </div>
+            `;
+        }
+
+        else {
+            document.getElementById("result").innerHTML = "❌ NOT FOUND";
+        }
+
+        isScanning = false;
+    });
+}
+
+
+// ================= SAVE YES =================
+async function saveYes() {
+
+    const res = await fetch(API_URL +
+        "?barcode=" + encodeURIComponent(tempCode) +
+        "&siNo=" + encodeURIComponent(tempSi));
+
+    const data = await res.json();
+
+    document.getElementById("result").innerHTML = `
+        <div class="card green">
+            ✅ Sold<br><br>
+            ${data.colJ ? "Lens: " + data.colJ + "<br>" : ""}
+            Description: ${data.colO || ""}
+        </div>
+    `;
+}
+
+
+// ================= CANCEL =================
+function cancelNo() {
+    document.getElementById("result").innerHTML = "❌ CANCELLED";
 }
 
 
@@ -225,16 +248,14 @@ async function startScan() {
 async function searchSI() {
 
     const siNo = document.getElementById("siNo").value.trim();
-
-    // 🔥 CLEAN SCAN RESULT BEFORE SEARCH
-    document.getElementById("result").innerHTML = "Ready";
-
     const out = document.getElementById("searchResult");
 
-    const res = await fetch(API_URL + "?action=searchSI&siNo=" + siNo);
+    document.getElementById("result").innerHTML = "Ready";
+
+    const res = await fetch(API_URL + "?action=searchSI&siNo=" + encodeURIComponent(siNo));
     const data = await res.json();
 
-    if (!data.items.length) {
+    if (!data.items || data.items.length === 0) {
         out.innerHTML = "No results";
         return;
     }
@@ -246,8 +267,7 @@ async function searchSI() {
         html += `
         <div class="card">
             #${index+1}<br>
-            <b>Col M:</b> ${i.colM}<br>
-            <b>Lens:</b> ${i.colJ}<br>
+            ${i.colJ ? `<b>Lens:</b> ${i.colJ}<br>` : ""}
             <b>Description:</b> ${i.colO}<br>
             ${i.barcode}
         </div>`;
@@ -261,7 +281,8 @@ async function searchSI() {
 function refreshPage() {
 
     document.getElementById("siNo").value = "";
-    clearAllResults();
+    document.getElementById("result").innerHTML = "Ready";
+    document.getElementById("searchResult").innerHTML = "";
 
     if (scanner) {
         scanner.stop();
