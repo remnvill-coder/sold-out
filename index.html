@@ -90,7 +90,7 @@ let isScanning = false;
 let tempCode = "";
 let tempSi = "";
 
-// ================= AUDIO FIX =================
+// ================= AUDIO =================
 let audioCtx = null;
 
 function initAudio() {
@@ -122,10 +122,18 @@ function vibrate() {
 
 document.addEventListener("click", initAudio, { once: true });
 
-const API_URL = "https://script.google.com/macros/s/AKfycbw5umJYcCkRDJQbNY4DcvpxBb9WRfXsxaH5icrkI0AsZwN1njqVNFVxBevUjRit0mX3GA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyc8UjNFP2IVlzlXkLx-eqkdNTcNcOAo3NyPQ3BHumVF90TIgQv7-mZVwYxTEokOW5JGg/exec";
+
+// ================= UI RESET (IMPORTANT FIX) =================
+function clearUI() {
+    document.getElementById("result").innerHTML = "Ready";
+    document.getElementById("searchResult").innerHTML = "";
+}
 
 // ================= SCAN =================
 async function startScan() {
+
+    clearUI();
 
     const siNo = document.getElementById("siNo").value;
 
@@ -141,9 +149,9 @@ async function startScan() {
 
     const devices = await Html5Qrcode.getCameras();
 
-    // FORCE BACK CAMERA
-    let cameraId = null;
+    let cameraId = devices[0].id;
 
+    // FORCE BACK CAMERA
     for (let i = 0; i < devices.length; i++) {
         const label = (devices[i].label || "").toLowerCase();
         if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
@@ -151,9 +159,6 @@ async function startScan() {
             break;
         }
     }
-
-    // fallback
-    if (!cameraId) cameraId = devices[0].id;
 
     scanner = new Html5Qrcode("reader");
 
@@ -172,7 +177,7 @@ async function startScan() {
 
             scanner = null;
 
-            // 🔊 SOUND + VIBRATION
+            // SOUND + VIBRATE
             beep();
             vibrate();
 
@@ -253,7 +258,14 @@ async function saveYes() {
 // ================= SEARCH =================
 async function searchSI() {
 
+    clearUI();
+
     const siNo = document.getElementById("siNo").value;
+
+    if (!siNo) {
+        document.getElementById("result").innerHTML = "⚠ Enter SI No";
+        return;
+    }
 
     const res = await fetch(API_URL +
         "?action=searchSI&siNo=" + encodeURIComponent(siNo));
@@ -284,10 +296,8 @@ function cancelNo() {
 
 // ================= REFRESH =================
 function refreshPage() {
-
     document.getElementById("siNo").value = "";
-    document.getElementById("result").innerHTML = "Ready";
-    document.getElementById("searchResult").innerHTML = "";
+    clearUI();
 
     if (scanner) {
         scanner.stop();
