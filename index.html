@@ -90,7 +90,39 @@ let isScanning = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzPSX0ABAKSjCtU7XLv6y9d0h46unXqCtyL-JiC9r-wj6h32CeOMHhaNiiF8QKrOkdqVw/exec";
+// ================= AUDIO FIX =================
+let audioCtx = null;
+
+function initAudio() {
+    if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+}
+
+function beep() {
+    initAudio();
+
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+
+    osc.type = "square";
+    osc.frequency.value = 900;
+    gain.gain.value = 0.15;
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.12);
+}
+
+function vibrate() {
+    if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
+}
+
+document.addEventListener("click", initAudio, { once: true });
+
+const API_URL = "https://script.google.com/macros/s/AKfycbw5umJYcCkRDJQbNY4DcvpxBb9WRfXsxaH5icrkI0AsZwN1njqVNFVxBevUjRit0mX3GA/exec";
 
 // ================= SCAN =================
 async function startScan() {
@@ -108,7 +140,20 @@ async function startScan() {
     }
 
     const devices = await Html5Qrcode.getCameras();
-    const cameraId = devices[0].id;
+
+    // FORCE BACK CAMERA
+    let cameraId = null;
+
+    for (let i = 0; i < devices.length; i++) {
+        const label = (devices[i].label || "").toLowerCase();
+        if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
+            cameraId = devices[i].id;
+            break;
+        }
+    }
+
+    // fallback
+    if (!cameraId) cameraId = devices[0].id;
 
     scanner = new Html5Qrcode("reader");
 
@@ -126,6 +171,10 @@ async function startScan() {
             } catch(e){}
 
             scanner = null;
+
+            // 🔊 SOUND + VIBRATION
+            beep();
+            vibrate();
 
             tempCode = code;
             tempSi = siNo;
@@ -201,17 +250,17 @@ async function saveYes() {
     `;
 }
 
-// ================= SEARCH SI =================
+// ================= SEARCH =================
 async function searchSI() {
 
     const siNo = document.getElementById("siNo").value;
-
-    const out = document.getElementById("searchResult");
 
     const res = await fetch(API_URL +
         "?action=searchSI&siNo=" + encodeURIComponent(siNo));
 
     const data = await res.json();
+
+    const out = document.getElementById("searchResult");
 
     if (!data.items || data.items.length === 0) {
         out.innerHTML = "No results";
