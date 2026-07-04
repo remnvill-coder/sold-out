@@ -157,9 +157,25 @@ function vibrate() {
 
 document.addEventListener("click", initAudio, { once: true });
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzDo1qrqlDyLLH8KqPNfQTOoT9Jj2ltN9wZpf7VO5I0ZdQECNeXEwHb302DcoKDUSRw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxnxEZdqfOCnojhSPHqXSyhiZCTbamrUcdoZY15sFLXcTuV7AUmGWiEFygyRoHgHJr7ZA/exec";
 
-/* RESET UI */
+/* ================= HELPERS ================= */
+function buildDetails(row) {
+
+    let colJ = row[9] || "";
+    let colM = row[12] || "";
+    let colO = row[14] || "";
+
+    let html = "";
+
+    if (colJ) html += `<b>Col J:</b> ${colJ}<br>`;
+    if (colM) html += `<b>Col M:</b> ${colM}<br>`;
+    if (colO) html += `<b>Description:</b> ${colO}<br>`;
+
+    return html;
+}
+
+/* RESET */
 function clearUI() {
     document.getElementById("result").innerHTML = "Ready";
     document.getElementById("searchResult").innerHTML = "";
@@ -210,15 +226,14 @@ async function startScan() {
             const data = await res.json();
 
             let row = data.row || [];
-            let colJ = row[9] || "";
-            let colO = row[14] || "";
+            let details = buildDetails(row);
 
             if (data.status === "FOUND") {
 
                 document.getElementById("result").innerHTML = `
                     <div class="card green">
                         ✅ AVAILABLE<br><br>
-                        <b>${colO}</b><br><br>
+                        ${details}
 
                         <button id="saveBtn" class="btn-blue" onclick="saveYes()">
                             ADD TO SOLD
@@ -232,15 +247,21 @@ async function startScan() {
             }
 
             else if (data.status === "DUPLICATE") {
+
                 document.getElementById("result").innerHTML = `
                     <div class="card red">
-                        ⚠ ALREADY SOLD
+                        ⚠ ALREADY SOLD<br><br>
+                        ${details}
                     </div>
                 `;
             }
 
             else {
-                document.getElementById("result").innerHTML = "❌ NOT FOUND";
+                document.getElementById("result").innerHTML = `
+                    <div class="card red">
+                        ❌ NOT FOUND
+                    </div>
+                `;
             }
 
             isScanning = false;
@@ -248,7 +269,7 @@ async function startScan() {
     );
 }
 
-/* SAVE (NO DOUBLE CLICK) */
+/* SAVE */
 async function saveYes() {
 
     if (isSaving) return;
@@ -263,9 +284,12 @@ async function saveYes() {
 
     const data = await res.json();
 
+    let row = data.row || [];
+
     document.getElementById("result").innerHTML = `
         <div class="card green">
-            ✅ ${data.status}
+            ✅ ${data.status}<br><br>
+            ${buildDetails(row)}
         </div>
     `;
 
@@ -287,15 +311,17 @@ async function searchSI() {
     const out = document.getElementById("searchResult");
 
     if (!data.items?.length) {
-        out.innerHTML = "No results";
+        out.innerHTML = "<div class='card'>No results</div>";
         return;
     }
 
     out.innerHTML = data.items.map((i, idx) => `
         <div class="card">
             #${idx+1}<br>
-            <b>${i.colO}</b><br>
-            ${i.barcode}
+            ${i.colJ ? `<b>Col J:</b> ${i.colJ}<br>` : ""}
+            ${i.colM ? `<b>Col M:</b> ${i.colM}<br>` : ""}
+            ${i.colO ? `<b>Description:</b> ${i.colO}<br>` : ""}
+            <b>${i.barcode}</b>
         </div>
     `).join("");
 }
