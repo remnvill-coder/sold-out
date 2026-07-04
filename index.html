@@ -68,7 +68,11 @@ button:disabled {
 <button id="searchBtn" onclick="searchSI()">
 SEARCH SI NO
 </button>
+<button onclick="refreshPage()" style="background:#ff9800;">
+REFRESH
+</button>
 
+    
 <p id="result">Ready</p>
 
 <div id="searchResult"></div>
@@ -240,6 +244,31 @@ async function searchSI() {
 
     } catch (err) {
         output.innerHTML = "ERROR ❌ " + err.message;
+    }
+}
+
+    function refreshPage() {
+
+    // Clear search results
+    document.getElementById("searchResult").innerHTML = "";
+
+    // Reset scan result
+    document.getElementById("result").innerHTML = "Ready";
+
+    // Clear SI input (optional)
+    document.getElementById("siNo").value = "";
+
+    // Reset scanner state if running
+    isScanning = false;
+
+    if (scanner !== null) {
+        try {
+            scanner.stop();
+            scanner.clear();
+        } catch (e) {
+            console.log(e);
+        }
+        scanner = null;
     }
 }
 
