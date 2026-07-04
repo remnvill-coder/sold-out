@@ -109,7 +109,7 @@ button:active {
 
 <body>
 
-<!-- LOGIN SCREEN -->
+
 <div id="loginScreen" style="
   position: fixed;
   top:0; left:0;
@@ -134,7 +134,7 @@ button:active {
   <p id="loginStatus"></p>
 </div>
 
-<!-- APP -->
+
 <div id="app" style="display:none;">
 
   <div class="header">
@@ -149,10 +149,6 @@ button:active {
     <input id="siNo" placeholder="Enter SI No">
 
     <button id="scanBtn" class="btn-blue" onclick="toggleScan()">📷 START SCAN</button>
-
-    <!-- 🔥 ADDED BUTTON -->
-    <button class="btn-blue" onclick="switchCamera()">🔄 SWITCH CAMERA</button>
-
     <button class="btn-blue" onclick="searchSI()">🔍 SEARCH SI</button>
     <button class="btn-orange" onclick="refreshPage()">♻ REFRESH</button>
 
@@ -170,11 +166,7 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-/* 🔥 ADDED */
-let cameraList = [];
-let currentCameraIndex = 0;
-
-const API_URL = "https://script.google.com/macros/s/AKfycbxzyj9G0I1rzFrgT_hAEOH_tYh8qNwmTNUJIxMJ7xQM0EPGq8S-4jE7560SQ48y7WBfiw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwsPnNyH631k-wvjZzSlX34WKb78iHS5eujIDGjW1xl6I7oea84vufMeVPp9Ez6iKwITA/exec";
 
 /* ================= LOGIN ================= */
 async function login() {
@@ -185,13 +177,7 @@ async function login() {
     return;
   }
 
-  const statusEl = document.getElementById("loginStatus");
-
-  // FORCE UI UPDATE BEFORE FETCH
-  statusEl.innerText = "Checking...";
-
-  // small delay so browser renders text
-  await new Promise(resolve => setTimeout(resolve, 100));
+  document.getElementById("loginStatus").innerText = "Checking...";
 
   try {
     const res = await fetch(API_URL + "?action=login&password=" + encodeURIComponent(pass));
@@ -201,13 +187,14 @@ async function login() {
       document.getElementById("loginScreen").style.display = "none";
       document.getElementById("app").style.display = "block";
     } else {
-      statusEl.innerText = "❌ Wrong password";
+      document.getElementById("loginStatus").innerText = "❌ Wrong password";
     }
 
   } catch (err) {
-    statusEl.innerText = "Server error";
+    document.getElementById("loginStatus").innerText = "Server error";
   }
 }
+
 
 function setUIScanning(state) {
   const btn = document.getElementById("scanBtn");
@@ -230,7 +217,8 @@ function setUIScanning(state) {
   }
 }
 
-/* ================= SCAN ================= */
+
+
 async function toggleScan() {
   const siNo = document.getElementById("siNo").value;
   if (!siNo) return alert("Enter SI No");
@@ -250,10 +238,10 @@ async function toggleScan() {
   isScanning = true;
   setUIScanning(true);
 
-  cameraList = await Html5Qrcode.getCameras();
-  let cameraId = cameraList[0].id;
+  const devices = await Html5Qrcode.getCameras();
+  let cameraId = devices[0].id;
 
-  for (let d of cameraList) {
+  for (let d of devices) {
     const label = (d.label || "").toLowerCase();
     if (label.includes("back") || label.includes("rear")) {
       cameraId = d.id;
@@ -286,8 +274,8 @@ async function toggleScan() {
       const data = await res.json();
 
       let row = data.row || [];
-      let colJ = row?.[9] || "";
-      let colO = row?.[14] || "";
+      let colJ = data.colJ || row?.[9] || "";
+      let colO = data.colO || row?.[14] || "";
 
       if (data.status === "FOUND") {
         document.getElementById("result").innerHTML = `
@@ -301,19 +289,25 @@ async function toggleScan() {
             <button class="btn-orange" onclick="cancelNo()">CANCEL</button>
           </div>
         `;
-      } else if (data.status === "DUPLICATE") {
+      }
+
+      else if (data.status === "DUPLICATE") {
         document.getElementById("result").innerHTML = `
           <div class="card red">
             ⚠ ALREADY SOLD<br><br>
             <b>${colO}</b><br>
             <b>${code}</b><br>
+            ${colJ ? `<small>${colJ}</small>` : ""}
           </div>
         `;
-      } else {
+      }
+
+      else {
         document.getElementById("result").innerHTML = `
           <div class="card red">
             ❌ NOT FOUND<br><br>
             <b>${colO}</b><br>
+            ${colJ ? `<small>${colJ}</small>` : ""}
           </div>
         `;
       }
@@ -321,62 +315,33 @@ async function toggleScan() {
   );
 }
 
-/* ================= 🔄 SWITCH CAMERA ================= */
-async function switchCamera() {
-  if (!cameraList.length) return alert("Start scanner first");
-  if (!scanner) return alert("Scanner not active");
-
-  await scanner.stop();
-  await scanner.clear();
-  scanner = null;
-
-  currentCameraIndex = (currentCameraIndex + 1) % cameraList.length;
-  const nextCameraId = cameraList[currentCameraIndex].id;
-
-  scanner = new Html5Qrcode("reader");
-
-  await scanner.start(nextCameraId, { fps: 10, qrbox: 250 }, async (code) => {
-    if (!isScanning) return;
-
-    isScanning = false;
-    await scanner.stop();
-    await scanner.clear();
-    scanner = null;
-    setUIScanning(false);
-
-    beep();
-    vibrate();
-
-    tempCode = code;
-    tempSi = document.getElementById("siNo").value;
-
-    const res = await fetch(API_URL + "?action=check&barcode=" + encodeURIComponent(code));
-    const data = await res.json();
-
-    let row = data.row || [];
-    let colJ = row?.[9] || "";
-    let colO = row?.[14] || "";
-
-    document.getElementById("result").innerHTML = `
-      <div class="card green">
-        ✅ SCANNED<br><br>
-        <b>${colO}</b><br>
-        <b>${code}</b><br>
-      </div>
-    `;
-  });
-}
-
-/* ================= OTHER FUNCTIONS (UNCHANGED) ================= */
 async function saveYes() {
+  if (isSaving) return;
+  isSaving = true;
+
+  document.getElementById("saveBtn").disabled = true;
+  document.getElementById("result").innerHTML = "⏳ Saving...";
+
   const res = await fetch(API_URL +
     "?action=save&barcode=" + encodeURIComponent(tempCode) +
     "&siNo=" + encodeURIComponent(tempSi));
 
   const data = await res.json();
 
-  document.getElementById("result").innerHTML =
-    `<div class="card green">✅ ${data.status}</div>`;
+  let row = data.row || [];
+  let colJ = data.colJ || row?.[9] || "";
+  let colO = data.colO || row?.[14] || "";
+
+  document.getElementById("result").innerHTML = `
+    <div class="card green">
+      ✅ ${data.status}<br><br>
+      <b>${colO}</b><br>
+      <b>${tempCode}</b><br>
+      ${colJ ? `<small>${colJ}</small>` : ""}
+    </div>
+  `;
+
+  isSaving = false;
 }
 
 async function searchSI() {
@@ -404,6 +369,8 @@ async function searchSI() {
   `).join("");
 }
 
+/* ================= UTIL ================= */
+
 function clearUI() {
   document.getElementById("result").innerHTML = "Ready";
   document.getElementById("searchResult").innerHTML = "";
@@ -418,24 +385,37 @@ function refreshPage() {
   clearUI();
 }
 
-/* AUDIO */
+
+
 let audioCtx = null;
 
+function initAudio() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
 function beep() {
-  if (!audioCtx) audioCtx = new AudioContext();
+  initAudio();
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
+
+  osc.type = "square";
   osc.frequency.value = 900;
-  gain.gain.value = 0.1;
+  gain.gain.value = 0.15;
+
   osc.connect(gain);
   gain.connect(audioCtx.destination);
+
   osc.start();
-  osc.stop(audioCtx.currentTime + 0.1);
+  osc.stop(audioCtx.currentTime + 0.12);
 }
 
 function vibrate() {
-  if (navigator.vibrate) navigator.vibrate(100);
+  if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
 }
+
+document.addEventListener("click", initAudio, { once: true });
 
 </script>
 
