@@ -68,39 +68,7 @@ button {
 let scanner = null;
 let isScanning = false;
 
-// 🔥 STORE TEMP DATA FOR CONFIRMATION
-let tempCode = "";
-let tempSi = "";
-
-// ================= AUDIO =================
-let audioCtx = null;
-document.addEventListener("click", () => {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    audioCtx.resume();
-}, { once: true });
-
-function beep() {
-    if (!audioCtx) return;
-
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-
-    osc.type = "square";
-    osc.frequency.value = 800;
-    gain.gain.value = 0.2;
-
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.12);
-}
-
-function vibrate() {
-    if (navigator.vibrate) navigator.vibrate([200,100,200]);
-}
-
-const API_URL = "https://script.google.com/macros/s/AKfycbzjgBdfyMyF08wwqIWYcHzHCqr_3NtYUeogLTOCX1q3TZ7sHemkizMFyXUJC5GCI-FABQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzpzYDY-NyuUCCivZkbRUM-shcNeF9_0qXNJtuqnrNJVFmJiYz5oxubpHyltibi9xpVzQ/exec";
 
 
 // ================= SCAN =================
@@ -125,99 +93,51 @@ async function startScan() {
 
     scanner = new Html5Qrcode("reader");
 
-    await scanner.start(
-        cameraId,
-        { fps: 10, qrbox: 250 },
+    await scanner.start(cameraId, { fps: 10, qrbox: 250 },
 
-        async (code) => {
+    async (code) => {
 
-            if (isScanning) return;
-            isScanning = true;
+        if (isScanning) return;
+        isScanning = true;
 
-            await scanner.stop();
-            await scanner.clear();
-            scanner = null;
+        await scanner.stop();
+        await scanner.clear();
+        scanner = null;
 
-            beep();
-            vibrate();
+        const res = await fetch(API_URL +
+            "?barcode=" + encodeURIComponent(code) +
+            "&siNo=" + encodeURIComponent(siNo));
 
-            tempCode = code;
-            tempSi = siNo;
+        const data = await res.json();
 
-            const res = await fetch(API_URL + "?barcode=" + encodeURIComponent(code) + "&siNo=" + encodeURIComponent(siNo));
-            const data = await res.json();
+        let colM = data.colM || "";
+        let colJ = data.colJ || "";
+        let colO = data.colO || "";
 
-            let colM = data.colM || "";
-            let colJ = data.colJ || "";
-            let colO = data.colO || "";
+        let details =
+            `<b>Tag No:</b> ${colM}<br>` +
+            (colJ ? `<b>Lens:</b> ${colJ}<br>` : "") +
+            `<b>Description:</b> ${colO}`;
 
-            let details =
-                `<b>Tag no:</b> ${colM}<br>` +
-                (colJ ? `<b>Lens:</b> ${colJ}<br>` : "") +
-                `<b>Description:</b> ${colO}`;
+        if (data.status === "FOUND") {
 
-            if (data.status === "FOUND") {
-
-                document.getElementById("result").innerHTML = `
-                    <div class="card green">
-                        ✅ Available<br><br>
-                        ${details}<br><br>
-
-                        <button onclick="saveYes()" style="background:green;color:white;">
-                            YES SAVE
-                        </button>
-
-                        <button onclick="cancelNo()" style="background:red;color:white;">
-                            NO
-                        </button>
-                    </div>
-                `;
-            }
-
-            else if (data.status === "DUPLICATE") {
-
-                document.getElementById("result").innerHTML = `
-                    <div class="card red">
-                        ⚠ Already Added to Sold<br><br>
-                        ${details}<br><br>
-
-                        <button onclick="cancelNo()" style="background:red;color:white;">
-                            OK
-                        </button>
-                    </div>
-                `;
-            }
-
-            else {
-                document.getElementById("result").innerHTML = "❌ NOT FOUND";
-            }
-
-            isScanning = false;
+            document.getElementById("result").innerHTML =
+                `<div class="card green">✅ FOUND<br><br>${details}</div>`;
         }
-    );
-}
 
+        else if (data.status === "DUPLICATE") {
 
-// ================= YES SAVE =================
-async function saveYes() {
+            document.getElementById("result").innerHTML =
+                `<div class="card red">⚠ DUPLICATE<br><br>${details}</div>`;
+        }
 
-    const res = await fetch(API_URL + "?barcode=" + encodeURIComponent(tempCode) + "&siNo=" + encodeURIComponent(tempSi));
-    const data = await res.json();
+        else {
+            document.getElementById("result").innerHTML = "❌ NOT FOUND";
+        }
 
-    document.getElementById("result").innerHTML = `
-        <div class="card green">
-            ✅ SOLD<br><br>
-            Tag no: ${data.colM || ""}<br>
-            Lens: ${data.colJ || ""}<br>
-            Description: ${data.colO || ""}
-        </div>
-    `;
-}
+        isScanning = false;
+    });
 
-
-// ================= CANCEL =================
-function cancelNo() {
-    document.getElementById("result").innerHTML = "❌ CANCELLED";
 }
 
 
@@ -225,16 +145,20 @@ function cancelNo() {
 async function searchSI() {
 
     const siNo = document.getElementById("siNo").value.trim();
-
     const out = document.getElementById("searchResult");
 
     document.getElementById("result").innerHTML = "Ready";
 
-    const res = await fetch(API_URL + "?action=searchSI&siNo=" + siNo);
+    if (!siNo) {
+        out.innerHTML = "⚠ Enter SI No";
+        return;
+    }
+
+    const res = await fetch(API_URL + "?action=searchSI&siNo=" + encodeURIComponent(siNo));
     const data = await res.json();
 
-    if (!data.items.length) {
-        out.innerHTML = "No results";
+    if (!data.items || data.items.length === 0) {
+        out.innerHTML = "❌ No results";
         return;
     }
 
@@ -245,9 +169,9 @@ async function searchSI() {
         html += `
         <div class="card">
             #${index+1}<br>
-            Tag no: ${i.colM}<br>
-            Lens: ${i.colJ}<br>
-            Description: ${i.colO}<br>
+            <b>Tag No:</b> ${i.colM || "N/A"}<br>
+            ${i.colJ ? `<b>Lens:</b> ${i.colJ}<br>` : ""}
+            <b>Description:</b> ${i.colO || "N/A"}<br>
             ${i.barcode}
         </div>`;
     });
