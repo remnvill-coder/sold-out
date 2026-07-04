@@ -144,15 +144,25 @@ function setUIScanning(state) {
     const btn = document.getElementById("scanBtn");
     const siBox = document.getElementById("siNo");
     const reader = document.getElementById("reader");
+    const refreshBtn = document.querySelector(".btn-orange"); // ✅ ADDED
 
     if (state) {
         btn.innerHTML = "⛔ STOP SCANNING";
         siBox.disabled = true;
         reader.style.display = "block";
+
+        refreshBtn.disabled = true;
+        refreshBtn.style.opacity = "0.5";
+        refreshBtn.style.cursor = "not-allowed";
+
     } else {
         btn.innerHTML = "📷 START SCAN";
         siBox.disabled = false;
         reader.style.display = "none";
+
+        refreshBtn.disabled = false;
+        refreshBtn.style.opacity = "1";
+        refreshBtn.style.cursor = "pointer";
     }
 }
 
