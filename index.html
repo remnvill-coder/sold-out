@@ -7,14 +7,13 @@
 
 <style>
 
-/* ================= APP BACKGROUND ================= */
 body {
     font-family: Arial;
     margin: 0;
     background: #eef2f7;
 }
 
-/* ================= HEADER (APP STYLE) ================= */
+/* HEADER */
 .header {
     display: flex;
     align-items: center;
@@ -26,7 +25,6 @@ body {
     position: sticky;
     top: 0;
     z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
 }
 
 .header img {
@@ -37,22 +35,21 @@ body {
     padding: 3px;
 }
 
-/* ================= MAIN CARD ================= */
+/* CONTAINER */
 .container {
     padding: 15px;
 }
 
-/* ================= SCANNER BOX ================= */
+/* SCANNER */
 #reader {
     width: 100%;
     max-width: 360px;
     margin: auto;
     border-radius: 15px;
     overflow: hidden;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
 }
 
-/* ================= INPUT ================= */
+/* INPUT */
 input {
     padding: 14px;
     width: 100%;
@@ -60,66 +57,51 @@ input {
     border-radius: 12px;
     border: none;
     margin-top: 12px;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
-/* ================= BUTTONS ================= */
+/* BUTTONS */
 button {
     padding: 14px;
     width: 100%;
     margin-top: 10px;
     border: none;
     border-radius: 12px;
-    font-size: 15px;
     font-weight: bold;
     cursor: pointer;
 }
 
 .btn-blue {
-    background: linear-gradient(135deg, #2196f3, #1976d2);
+    background: #1976d2;
     color: white;
 }
 
 .btn-orange {
-    background: linear-gradient(135deg, #ff9800, #ff5722);
+    background: #ff5722;
     color: white;
 }
 
-/* ================= RESULT CARD ================= */
+/* CARD */
 .card {
     padding: 15px;
     border-radius: 15px;
     margin-top: 12px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     background: white;
 }
 
-.green {
-    border-left: 6px solid #2ecc71;
-}
-
-.red {
-    border-left: 6px solid #e74c3c;
-}
-
-/* ================= TEXT ================= */
-#result, #searchResult {
-    margin-top: 15px;
-    font-weight: bold;
-}
+.green { border-left: 6px solid #2ecc71; }
+.red { border-left: 6px solid #e74c3c; }
 
 </style>
 </head>
 
 <body>
 
-<!-- ================= HEADER ================= -->
+<!-- HEADER -->
 <div class="header">
     <img src="https://drive.google.com/thumbnail?id=1tOeVr8yecFf_REL9zHznEh9Qs2clqVrt&sz=w200">
     <h3 style="margin:0;">SCAN ITEM SYSTEM</h3>
 </div>
 
-<!-- ================= APP BODY ================= -->
 <div class="container">
 
     <div id="reader"></div>
@@ -139,11 +121,12 @@ button {
 
 let scanner = null;
 let isScanning = false;
+let isSaving = false;
 
 let tempCode = "";
 let tempSi = "";
 
-/* ================= AUDIO ================= */
+/* AUDIO */
 let audioCtx = null;
 
 function initAudio() {
@@ -154,7 +137,6 @@ function initAudio() {
 
 function beep() {
     initAudio();
-
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
 
@@ -175,39 +157,29 @@ function vibrate() {
 
 document.addEventListener("click", initAudio, { once: true });
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyc8UjNFP2IVlzlXkLx-eqkdNTcNcOAo3NyPQ3BHumVF90TIgQv7-mZVwYxTEokOW5JGg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzDo1qrqlDyLLH8KqPNfQTOoT9Jj2ltN9wZpf7VO5I0ZdQECNeXEwHb302DcoKDUSRw/exec";
 
-/* ================= UI RESET ================= */
+/* RESET UI */
 function clearUI() {
     document.getElementById("result").innerHTML = "Ready";
     document.getElementById("searchResult").innerHTML = "";
 }
 
-/* ================= SCAN ================= */
+/* SCAN */
 async function startScan() {
 
     clearUI();
 
     const siNo = document.getElementById("siNo").value;
-
-    if (!siNo) {
-        document.getElementById("result").innerHTML = "⚠ Enter SI No";
-        return;
-    }
-
-    if (scanner) {
-        try { await scanner.stop(); await scanner.clear(); } catch(e){}
-        scanner = null;
-    }
+    if (!siNo) return alert("Enter SI No");
 
     const devices = await Html5Qrcode.getCameras();
 
     let cameraId = devices[0].id;
-
-    for (let i = 0; i < devices.length; i++) {
-        const label = (devices[i].label || "").toLowerCase();
-        if (label.includes("back") || label.includes("rear") || label.includes("environment")) {
-            cameraId = devices[i].id;
+    for (let d of devices) {
+        const label = (d.label || "").toLowerCase();
+        if (label.includes("back") || label.includes("rear")) {
+            cameraId = d.id;
             break;
         }
     }
@@ -222,11 +194,8 @@ async function startScan() {
             if (isScanning) return;
             isScanning = true;
 
-            try {
-                await scanner.stop();
-                await scanner.clear();
-            } catch(e){}
-
+            await scanner.stop();
+            await scanner.clear();
             scanner = null;
 
             beep();
@@ -236,32 +205,26 @@ async function startScan() {
             tempSi = siNo;
 
             const res = await fetch(API_URL +
-                "?action=check&barcode=" + encodeURIComponent(code) +
-                "&siNo=" + encodeURIComponent(siNo));
+                "?action=check&barcode=" + encodeURIComponent(code));
 
             const data = await res.json();
 
             let row = data.row || [];
-
             let colJ = row[9] || "";
             let colO = row[14] || "";
-
-            let details =
-                (colJ ? `<b>Lens:</b> ${colJ}<br>` : "") +
-                `<b>Description:</b> ${colO}`;
 
             if (data.status === "FOUND") {
 
                 document.getElementById("result").innerHTML = `
                     <div class="card green">
                         ✅ AVAILABLE<br><br>
-                        ${details}<br><br>
+                        <b>${colO}</b><br><br>
 
-                        <button onclick="saveYes()" class="btn-blue">
-                            ADD TO SOLD?
+                        <button id="saveBtn" class="btn-blue" onclick="saveYes()">
+                            ADD TO SOLD
                         </button>
 
-                        <button onclick="cancelNo()" class="btn-orange">
+                        <button class="btn-orange" onclick="cancelNo()">
                             CANCEL
                         </button>
                     </div>
@@ -269,22 +232,15 @@ async function startScan() {
             }
 
             else if (data.status === "DUPLICATE") {
-
                 document.getElementById("result").innerHTML = `
                     <div class="card red">
-                        ⚠ ALREADY SOLD<br><br>
-                        ${details}<br><br>
-                        <button onclick="cancelNo()" class="btn-orange">OK</button>
+                        ⚠ ALREADY SOLD
                     </div>
                 `;
             }
 
             else {
-                document.getElementById("result").innerHTML = `
-                    <div class="card red">
-                        ❌ NOT FOUND
-                    </div>
-                `;
+                document.getElementById("result").innerHTML = "❌ NOT FOUND";
             }
 
             isScanning = false;
@@ -292,25 +248,31 @@ async function startScan() {
     );
 }
 
-/* ================= SAVE ================= */
+/* SAVE (NO DOUBLE CLICK) */
 async function saveYes() {
 
+    if (isSaving) return;
+    isSaving = true;
+
+    document.getElementById("saveBtn").disabled = true;
+    document.getElementById("result").innerHTML = "⏳ Saving...";
+
     const res = await fetch(API_URL +
-        "?action=save" +
-        "&barcode=" + encodeURIComponent(tempCode) +
+        "?action=save&barcode=" + encodeURIComponent(tempCode) +
         "&siNo=" + encodeURIComponent(tempSi));
 
     const data = await res.json();
 
     document.getElementById("result").innerHTML = `
         <div class="card green">
-            ✅ SOLD SAVED<br>
-            Status: ${data.status}
+            ✅ ${data.status}
         </div>
     `;
+
+    isSaving = false;
 }
 
-/* ================= SEARCH ================= */
+/* SEARCH */
 async function searchSI() {
 
     clearUI();
@@ -324,36 +286,29 @@ async function searchSI() {
 
     const out = document.getElementById("searchResult");
 
-    if (!data.items || data.items.length === 0) {
-        out.innerHTML = "<div class='card'>No results</div>";
+    if (!data.items?.length) {
+        out.innerHTML = "No results";
         return;
     }
 
-    out.innerHTML = data.items.map((i, index) => `
+    out.innerHTML = data.items.map((i, idx) => `
         <div class="card">
-            #${index + 1}<br>
-            <b>Lens:</b> ${i.colJ}<br>
-            <b>Description:</b> ${i.colO}<br>
+            #${idx+1}<br>
+            <b>${i.colO}</b><br>
             ${i.barcode}
         </div>
     `).join("");
 }
 
-/* ================= CANCEL ================= */
+/* CANCEL */
 function cancelNo() {
     document.getElementById("result").innerHTML = "❌ CANCELLED";
 }
 
-/* ================= REFRESH ================= */
+/* REFRESH */
 function refreshPage() {
     document.getElementById("siNo").value = "";
     clearUI();
-
-    if (scanner) {
-        scanner.stop();
-        scanner.clear();
-        scanner = null;
-    }
 }
 
 </script>
