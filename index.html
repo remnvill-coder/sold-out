@@ -59,25 +59,53 @@ input {
     margin-top: 12px;
 }
 
-/* BUTTONS */
+/* ===================== */
+/* ✨ UPGRADED BUTTONS */
+/* ===================== */
+
 button {
     padding: 14px;
     width: 100%;
     margin-top: 10px;
     border: none;
-    border-radius: 12px;
+    border-radius: 14px;
     font-weight: bold;
     cursor: pointer;
+    transition: all 0.25s ease;
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
+/* HOVER EFFECT */
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 18px rgba(0,0,0,0.18);
+}
+
+/* CLICK EFFECT */
+button:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+/* BLUE BUTTON */
 .btn-blue {
-    background: #1976d2;
+    background: linear-gradient(135deg, #2196f3, #1976d2);
     color: white;
 }
 
+.btn-blue:hover {
+    filter: brightness(1.1);
+}
+
+/* ORANGE BUTTON */
 .btn-orange {
-    background: #ff5722;
+    background: linear-gradient(135deg, #ff7043, #ff5722);
     color: white;
+}
+
+.btn-orange:hover {
+    filter: brightness(1.1);
 }
 
 /* CARD */
@@ -158,7 +186,7 @@ document.addEventListener("click", initAudio, { once: true });
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyICU0St3dGLDp3QoogpGDlVSXR84zG7UfT5fl_Ya1Th4Dmgd5NvA3P0ams4d16QwP_PA/exec";
 
-/* RESET UI */
+/* RESET */
 function clearUI() {
     document.getElementById("result").innerHTML = "Ready";
     document.getElementById("searchResult").innerHTML = "";
@@ -209,17 +237,16 @@ async function startScan() {
             const data = await res.json();
 
             let row = data.row || [];
-            let colJ = data.colJ || row[9] || "";
-            let colO = data.colO || row[14] || "";
+            let colJ = data.colJ || row?.[9] || "";
+            let colO = data.colO || row?.[14] || "";
 
-            // ================= FOUND =================
             if (data.status === "FOUND") {
 
                 document.getElementById("result").innerHTML = `
                     <div class="card green">
                         ✅ AVAILABLE<br><br>
                         <b>${colO}</b><br>
-                        <b>${i.barcode}</b><br>
+                        <b>${code}</b><br>
                         ${colJ ? `<small>${colJ}</small><br>` : ""}<br>
 
                         <button id="saveBtn" class="btn-blue" onclick="saveYes()">
@@ -233,20 +260,20 @@ async function startScan() {
                 `;
             }
 
-            // ================= DUPLICATE =================
             else if (data.status === "DUPLICATE") {
+
                 document.getElementById("result").innerHTML = `
                     <div class="card red">
                         ⚠ ALREADY SOLD<br><br>
                         <b>${colO}</b><br>
-                        <b>${i.barcode}</b><br>
+                        <b>${code}</b><br>
                         ${colJ ? `<small>${colJ}</small>` : ""}
                     </div>
                 `;
             }
 
-            // ================= NOT FOUND =================
             else {
+
                 document.getElementById("result").innerHTML = `
                     <div class="card red">
                         ❌ NOT FOUND<br><br>
@@ -277,14 +304,14 @@ async function saveYes() {
     const data = await res.json();
 
     let row = data.row || [];
-    let colJ = data.colJ || row[9] || "";
-    let colO = data.colO || row[14] || "";
+    let colJ = data.colJ || row?.[9] || "";
+    let colO = data.colO || row?.[14] || "";
 
     document.getElementById("result").innerHTML = `
         <div class="card green">
             ✅ ${data.status}<br><br>
             <b>${colO}</b><br>
-            <b>${i.barcode}</b><br>
+            <b>${tempCode}</b><br>
             ${colJ ? `<small>${colJ}</small>` : ""}
         </div>
     `;
@@ -311,12 +338,12 @@ async function searchSI() {
         return;
     }
 
-    out.innerHTML = data.items.map((i, idx) => `
+    out.innerHTML = data.items.map((item, idx) => `
         <div class="card">
             #${idx+1}<br>
-            <b>${i.colO}</b><br>
-            ${i.colJ ? `<small>${i.colJ}</small><br>` : ""}
-            ${i.barcode}
+            <b>${item.colO}</b><br>
+            ${item.colJ ? `<small>${item.colJ}</small><br>` : ""}
+            ${item.barcode}
         </div>
     `).join("");
 }
