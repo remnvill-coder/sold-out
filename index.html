@@ -286,7 +286,6 @@ async function login() {
     if (data.status === "OK") {
       document.getElementById("loginScreen").style.display = "none";
       document.getElementById("app").style.display = "block";
-      lastUploadedPhotos = [data.link1, data.link2];
     } else {
       document.getElementById("loginStatus").innerText = "❌ Wrong password";
     }
@@ -455,7 +454,7 @@ async function saveYes() {
 
   isSaving = false;
 }
-lastUploadedPhotos = [];
+
 async function searchSI() {
   clearUI();
 
@@ -484,19 +483,7 @@ async function searchSI() {
     </div>
   `).join("");
 }
-let photoHTML = "";
 
-if (lastUploadedPhotos.length === 2) {
-  photoHTML = `
-    <div class="card">
-      <b>📸 Uploaded Photos</b><br><br>
-      <img src="${lastUploadedPhotos[0]}" style="width:100px;height:100px;border-radius:10px;object-fit:cover;">
-      <img src="${lastUploadedPhotos[1]}" style="width:100px;height:100px;border-radius:10px;object-fit:cover;margin-left:10px;">
-    </div>
-  `;
-}
-
-out.innerHTML += photoHTML;
 /* ================= UTIL ================= */
 
 function clearUI() {
@@ -568,42 +555,37 @@ document.addEventListener("click", initAudio, { once: true });
 }
 
 let selectedFiles = [];
-  
 
 document.getElementById("cameraInput").addEventListener("change", function (e) {
 
-  const file = e.target.files[0];
-  if (!file) return;
+  const newFiles = Array.from(e.target.files);
 
-  // add 1 photo at a time
-  selectedFiles.push(file);
+  selectedFiles = [...newFiles]; // ✅ fixed
 
-  // show preview
+
+  if (selectedFiles.length < 2) {
+    alert("Please capture 2 photos");
+    return;
+  }
+
   const preview = document.getElementById("photoPreview");
+  preview.innerHTML = "";
 
-  const img = document.createElement("img");
-  img.style.width = "80px";
-  img.style.height = "80px";
-  img.style.objectFit = "cover";
-  img.style.borderRadius = "10px";
-  img.src = URL.createObjectURL(file);
-
-  preview.appendChild(img);
+  selectedFiles.forEach(file => {
+    const img = document.createElement("img");
+    img.style.width = "80px";
+    img.style.height = "80px";
+    img.style.objectFit = "cover";
+    img.style.borderRadius = "10px";
+    img.src = URL.createObjectURL(file);
+    preview.appendChild(img);
+  });
 
   e.target.value = "";
-
-  // optional message
-  if (selectedFiles.length === 1) {
-    alert("Photo 1 saved. Now take Photo 2.");
-  }
-
-  if (selectedFiles.length === 2) {
-    alert("2 photos ready. You can now upload.");
-  }
 });
-async function uploadPhotos() {
+  async function uploadPhotos() {
   if (selectedFiles.length !== 2) {
-    alert("Please capture 2 photos first (exactly 2 required)");
+    alert("Please select exactly 2 photos");
     return;
   }
 
@@ -633,7 +615,7 @@ async function uploadPhotos() {
 
     if (data.status === "OK") {
       selectedFiles = [];
-      document.getElementById("photoPreview").innerHTML = "";
+document.getElementById("photoPreview").innerHTML = "";
       document.getElementById("result").innerHTML = `
         <div class="card green">
           ✅ Upload successful<br><br>
