@@ -383,11 +383,11 @@ async function toggleScan() {
       else if (data.status === "DUPLICATE") {
         document.getElementById("result").innerHTML = `
        <div class="card red">
-  ${colJ ? `<small>${colJ}</small><br><br>` : ""}
-  ⚠ ALREADY SOLD<br><br>
-  <b>${colO}</b><br>
-  <b>${code}</b>
-</div>
+        ⚠ ALREADY SOLD<br><br>
+          <b>${colO}</b><br>
+         ${colJ ? `<small>${colJ}</small><br><br>` : ""}
+          <b>${code}</b>
+            </div>
         `;
       }
 
