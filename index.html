@@ -266,7 +266,7 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxqsYOZOq50YWolbZOyvKrd52OgI2spH70Ggk3vRDI375OzOlm1E4tdMN_zB8zxCpupfw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxDye9Li_v3jIvmoFyoO_-pNR_Js1hILOWxEM8gfqN9WccT0k5V-YxvKZlxteFjjSOaTQ/exec";
 
 /* ================= LOGIN ================= */
 async function login() {
@@ -560,16 +560,15 @@ document.getElementById("cameraInput").addEventListener("change", function (e) {
 
   const newFiles = Array.from(e.target.files);
 
-  selectedFiles.push(...newFiles);
+  selectedFiles = [...newFiles]; // ✅ fixed
 
-if (selectedFiles.length < 2) {
-  alert("Please capture 2 photos");
-  return;
-}
+
+  if (selectedFiles.length < 2) {
+    alert("Please capture 2 photos");
+    return;
+  }
 
   const preview = document.getElementById("photoPreview");
-
-  // IMPORTANT: rebuild cleanly
   preview.innerHTML = "";
 
   selectedFiles.forEach(file => {
@@ -584,11 +583,6 @@ if (selectedFiles.length < 2) {
 
   e.target.value = "";
 });
-
-  // reset input so same file can be selected again
-  e.target.value = "";
-});
-
   async function uploadPhotos() {
   if (selectedFiles.length !== 2) {
     alert("Please select exactly 2 photos");
@@ -620,6 +614,8 @@ if (selectedFiles.length < 2) {
     const data = await res.json();
 
     if (data.status === "OK") {
+      selectedFiles = [];
+document.getElementById("photoPreview").innerHTML = "";
       document.getElementById("result").innerHTML = `
         <div class="card green">
           ✅ Upload successful<br><br>
