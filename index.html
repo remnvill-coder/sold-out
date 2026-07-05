@@ -286,6 +286,7 @@ async function login() {
     if (data.status === "OK") {
       document.getElementById("loginScreen").style.display = "none";
       document.getElementById("app").style.display = "block";
+      lastUploadedPhotos = [data.link1, data.link2];
     } else {
       document.getElementById("loginStatus").innerText = "❌ Wrong password";
     }
@@ -454,7 +455,7 @@ async function saveYes() {
 
   isSaving = false;
 }
-
+lastUploadedPhotos = [];
 async function searchSI() {
   clearUI();
 
@@ -483,7 +484,19 @@ async function searchSI() {
     </div>
   `).join("");
 }
+let photoHTML = "";
 
+if (lastUploadedPhotos.length === 2) {
+  photoHTML = `
+    <div class="card">
+      <b>📸 Uploaded Photos</b><br><br>
+      <img src="${lastUploadedPhotos[0]}" style="width:100px;height:100px;border-radius:10px;object-fit:cover;">
+      <img src="${lastUploadedPhotos[1]}" style="width:100px;height:100px;border-radius:10px;object-fit:cover;margin-left:10px;">
+    </div>
+  `;
+}
+
+out.innerHTML += photoHTML;
 /* ================= UTIL ================= */
 
 function clearUI() {
