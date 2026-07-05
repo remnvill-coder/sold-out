@@ -396,11 +396,17 @@ async function saveYes() {
 
   document.getElementById("result").innerHTML = `
     <div class="card green">
-      ✅ ${data.status}<br><br>
-      <b>${colO}</b><br>
-      <b>${tempCode}</b><br>
-      ${colJ ? `<small>${colJ}</small>` : ""}
-    </div>
+  <div>✅ ${data.status}</div>
+  <br>
+
+  <b style="font-size:16px;">${colO}</b><br>
+
+  ${colJ ? `<small style="color:#666;">${colJ}</small><br>` : ""}
+
+  <div style="margin-top:12px; font-size:14px; letter-spacing:1px;">
+    🔢 ${tempCode}
+  </div>
+</div>
   `;
 
   isSaving = false;
