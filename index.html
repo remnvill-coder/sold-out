@@ -137,6 +137,30 @@ button:active {
     transform: rotate(360deg);
   }
 }
+
+  .no-results {
+  text-align: center;
+  margin-top: 20px;
+  padding: 20px;
+  font-weight: bold;
+  color: #666;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* optional smooth appearance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 </style>
 </head>
 
@@ -393,7 +417,11 @@ async function searchSI() {
   const out = document.getElementById("searchResult");
 
   if (!data.items?.length) {
-    out.innerHTML = "No results";
+    out.innerHTML = `
+  <div class="no-results">
+    ❌ No results found
+  </div>
+`;
     return;
   }
 
