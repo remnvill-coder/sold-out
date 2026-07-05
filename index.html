@@ -240,7 +240,18 @@ button:active {
     <button id="scanBtn" class="btn-blue" onclick="toggleScan()">📷 START SCAN</button>
     <button class="btn-blue" onclick="searchSI()">🔍 SEARCH SI</button>
     <button class="btn-orange" onclick="refreshPage()">♻ REFRESH</button>
+    <!-- CAMERA CAPTURE MODULE -->
+<input id="cameraInput" type="file" accept="image/*" capture="environment" multiple style="display:none" />
 
+<button class="btn-blue" onclick="document.getElementById('cameraInput').click()">
+  📸 CAPTURE 2 PHOTOS
+</button>
+
+<div id="photoPreview" style="display:flex; gap:10px; margin-top:10px;"></div>
+    <button class="btn-orange" onclick="uploadPhotos()">
+  UPLOAD PHOTOS
+</button>
+    
     <p id="result"></p>
     <div id="searchResult"></div>
 
@@ -255,7 +266,7 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwmDhhXokyaHkz8z7M1eB39csSLA9CIYuEupFAQKnsJ28TSZzan8-3WKxR9XhQy4qAAvQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbw1G5PW4P2voYVCnMpWqPmNEOBXyBSnqvDIUZRch_plwPet-0tptsTw-Exubf9Of2FS/exec";
 
 /* ================= LOGIN ================= */
 async function login() {
@@ -525,6 +536,93 @@ function vibrate() {
 
 document.addEventListener("click", initAudio, { once: true });
 
+
+  function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      const base64 = reader.result.split(",")[1]; // remove header
+      resolve(base64);
+    };
+
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+let selectedFiles = [];
+
+  document.getElementById("cameraInput").addEventListener("change", function (e) {
+  selectedFiles = Array.from(e.target.files);
+
+  const preview = document.getElementById("photoPreview");
+  preview.innerHTML = "";
+
+  selectedFiles.forEach(file => {
+    const img = document.createElement("img");
+    img.style.width = "80px";
+    img.style.height = "80px";
+    img.style.objectFit = "cover";
+    img.style.borderRadius = "10px";
+    img.src = URL.createObjectURL(file);
+    preview.appendChild(img);
+  });
+});
+  async function uploadPhotos() {
+  if (selectedFiles.length !== 2) {
+    alert("Please select exactly 2 photos");
+    return;
+  }
+
+  document.getElementById("result").innerHTML = `
+    <div class="card saving">
+      <div class="spinner"></div>
+      <div class="saving-text">Uploading photos...</div>
+    </div>
+  `;
+
+  try {
+    const base64_1 = await fileToBase64(selectedFiles[0]);
+    const base64_2 = await fileToBase64(selectedFiles[1]);
+
+    const formData = new URLSearchParams();
+    formData.append("action", "uploadPhotos");
+    formData.append("siNo", document.getElementById("siNo").value);
+    formData.append("photo1", base64_1);
+    formData.append("photo2", base64_2);
+
+    const res = await fetch(API_URL, {
+      method: "POST",
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.status === "OK") {
+      document.getElementById("result").innerHTML = `
+        <div class="card green">
+          ✅ Upload successful<br><br>
+          <a href="${data.link1}" target="_blank">Photo 1</a><br>
+          <a href="${data.link2}" target="_blank">Photo 2</a>
+        </div>
+      `;
+    } else {
+      document.getElementById("result").innerHTML = `
+        <div class="card red">
+          ❌ ${data.status}
+        </div>
+      `;
+    }
+
+  } catch (err) {
+    document.getElementById("result").innerHTML = `
+      <div class="card red">
+        ❌ Upload error
+      </div>
+    `;
+  }
+}
 </script>
 
 </body>
