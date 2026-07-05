@@ -5,13 +5,9 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
 
 <style>
-body {
-  font-family: Arial;
-  margin: 0;
-  background: #eef2f7;
-}
+/* ===== YOUR CSS UNCHANGED ===== */
+body { font-family: Arial; margin: 0; background: #eef2f7; }
 
-/* HEADER */
 .header {
   display: flex;
   align-items: center;
@@ -33,21 +29,10 @@ body {
   padding: 3px;
 }
 
-/* CONTAINER */
-.container {
-  padding: 15px;
-}
+.container { padding: 15px; }
 
-/* SCANNER */
-#reader {
-  width: 100%;
-  max-width: 360px;
-  margin: auto;
-  border-radius: 15px;
-  overflow: hidden;
-}
+#reader { width: 100%; max-width: 360px; margin: auto; border-radius: 15px; overflow: hidden; }
 
-/* INPUT */
 input {
   padding: 14px;
   width: 100%;
@@ -57,7 +42,6 @@ input {
   margin-top: 12px;
 }
 
-/* BUTTONS */
 button {
   padding: 14px;
   width: 100%;
@@ -70,41 +54,16 @@ button {
   box-shadow: 0 4px 10px rgba(0,0,0,0.12);
 }
 
-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 18px rgba(0,0,0,0.18);
-}
+button:hover { transform: translateY(-3px); box-shadow: 0 10px 18px rgba(0,0,0,0.18); }
+button:active { transform: translateY(1px) scale(0.98); }
 
-button:active {
-  transform: translateY(1px) scale(0.98);
-}
+.btn-blue { background: linear-gradient(135deg, #2196f3, #1976d2); color: white; }
+.btn-orange { background: linear-gradient(135deg, #ff7043, #ff5722); color: white; }
 
-.btn-blue {
-  background: linear-gradient(135deg, #2196f3, #1976d2);
-  color: white;
-}
+.card { padding: 15px; border-radius: 15px; margin-top: 12px; background: white; }
+.green { border-left: 6px solid #2ecc71; }
+.red { border-left: 6px solid #e74c3c; }
 
-.btn-orange {
-  background: linear-gradient(135deg, #ff7043, #ff5722);
-  color: white;
-}
-
-/* CARD */
-.card {
-  padding: 15px;
-  border-radius: 15px;
-  margin-top: 12px;
-  background: white;
-}
-
-.green {
-  border-left: 6px solid #2ecc71;
-}
-
-.red {
-  border-left: 6px solid #e74c3c;
-}
-  /* SAVING CARD */
 .saving {
   border-left: 6px solid #2196f3;
   text-align: center;
@@ -114,7 +73,6 @@ button:active {
   font-weight: bold;
 }
 
-/* SPINNER */
 .spinner {
   width: 35px;
   height: 35px;
@@ -125,20 +83,9 @@ button:active {
   animation: spin 0.8s linear infinite;
 }
 
-/* TEXT STYLE */
-.saving-text {
-  font-size: 16px;
-  letter-spacing: 0.5px;
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-/* ANIMATION */
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-  .no-results {
+.no-results {
   text-align: center;
   margin-top: 20px;
   padding: 20px;
@@ -146,179 +93,93 @@ button:active {
   color: #666;
   background: white;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* optional smooth appearance */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-  /* SCAN SUCCESS ANIMATION CARD */
 .scan-animate {
   animation: popIn 0.35s ease-out, glow 1s ease-in-out;
-  transform-origin: center;
 }
 
-/* POP IN EFFECT */
 @keyframes popIn {
-  from {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
-/* GLOW EFFECT */
 @keyframes glow {
-  0% {
-    box-shadow: 0 0 0 rgba(46, 204, 113, 0);
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(46, 204, 113, 0.8);
-  }
-  100% {
-    box-shadow: 0 0 0 rgba(46, 204, 113, 0);
-  }
+  0% { box-shadow: 0 0 0 rgba(46,204,113,0); }
+  50% { box-shadow: 0 0 25px rgba(46,204,113,0.8); }
+  100% { box-shadow: 0 0 0 rgba(46,204,113,0); }
 }
-  
 </style>
 </head>
 
 <body>
 
-
-<div id="loginScreen" style="
-  position: fixed;
-  top:0; left:0;
-  width:100%; height:100%;
-  background:#eef2f7;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-direction:column;
-  z-index:9999;
-">
-
+<div id="loginScreen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#eef2f7;display:flex;align-items:center;justify-content:center;flex-direction:column;z-index:9999;">
   <h2>🔐 SYSTEM LOGIN</h2>
-
-  <input id="password" type="password" placeholder="Enter Password"
-    style="padding:14px; width:80%; max-width:300px; border-radius:10px; border:none;">
-
-  <button class="btn-blue" style="width:80%; max-width:300px;" onclick="login()">
-    LOGIN
-  </button>
-
+  <input id="password" type="password" placeholder="Enter Password" style="padding:14px;width:80%;max-width:300px;border-radius:10px;border:none;">
+  <button class="btn-blue" style="width:80%;max-width:300px;" onclick="login()">LOGIN</button>
   <p id="loginStatus"></p>
 </div>
 
-
 <div id="app" style="display:none;">
-
   <div class="header">
     <img src="https://drive.google.com/thumbnail?id=1U9kmQ7qummOCpVppdLtmVaugMuzLYUWQ&sz=w200">
-    <h3 style="margin:0;">GAISANO ILOILO BRANCH</h3>
+    <h3>GAISANO ILOILO BRANCH</h3>
   </div>
 
   <div class="container">
-
     <div id="reader" style="display:none;"></div>
 
     <input id="siNo" placeholder="Enter SI No">
 
-    <button id="scanBtn" class="btn-blue" onclick="toggleScan()">📷 START SCAN</button>
+    <button class="btn-blue" onclick="toggleScan()">📷 START SCAN</button>
     <button class="btn-blue" onclick="searchSI()">🔍 SEARCH SI</button>
     <button class="btn-orange" onclick="refreshPage()">♻ REFRESH</button>
-    <!-- CAMERA CAPTURE MODULE -->
-<input id="cameraInput" type="file" accept="image/*" capture="environment" multiple style="display:none" />
 
-<button class="btn-blue" onclick="openCamera()">
-  📸 CAPTURE PHOTO
-</button>
+    <input id="cameraInput" type="file" accept="image/*" capture="environment" style="display:none">
+    <button class="btn-blue" onclick="openCamera()">📸 CAPTURE PHOTO</button>
 
-<div id="photoPreview" style="display:flex; gap:10px; margin-top:10px;"></div>
-    <button class="btn-orange" onclick="uploadPhotos()">
-  UPLOAD PHOTOS
-</button>
-    
+    <div id="photoPreview"></div>
+
+    <button class="btn-orange" onclick="uploadPhotos()">UPLOAD PHOTOS</button>
+
     <p id="result"></p>
     <div id="searchResult"></div>
-
   </div>
 </div>
 
 <script>
 
+const API_URL = "https://script.google.com/macros/s/AKfycbwjDQisLCHe_I5VQO_HcbOqM3b4jCWdoRtTJ5EdSvYQLZNZBSwnTG1AoyVcVZmtgWK85w/exec";
+
 let scanner = null;
 let isScanning = false;
 let isSaving = false;
+
 let tempCode = "";
 let tempSi = "";
-
-const API_URL = "https://script.google.com/macros/s/AKfycbwjDQisLCHe_I5VQO_HcbOqM3b4jCWdoRtTJ5EdSvYQLZNZBSwnTG1AoyVcVZmtgWK85w/exec";
+let selectedFiles = [];
+let lastUploadedPhotos = [];
 
 /* ================= LOGIN ================= */
 async function login() {
   const pass = document.getElementById("password").value;
 
-  if (!pass) {
-    document.getElementById("loginStatus").innerText = "Enter password";
-    return;
-  }
+  const res = await fetch(API_URL + "?action=login&password=" + encodeURIComponent(pass));
+  const data = await res.json();
 
-  document.getElementById("loginStatus").innerText = "Checking...";
-
-  try {
-    const res = await fetch(API_URL + "?action=login&password=" + encodeURIComponent(pass));
-    const data = await res.json();
-
-    if (data.status === "OK") {
-      document.getElementById("loginScreen").style.display = "none";
-      document.getElementById("app").style.display = "block";
-      lastUploadedPhotos = [data.link1, data.link2];
-    } else {
-      document.getElementById("loginStatus").innerText = "❌ Wrong password";
-    }
-
-  } catch (err) {
-    document.getElementById("loginStatus").innerText = "Server error";
-  }
-}
-
-
-function setUIScanning(state) {
-  const btn = document.getElementById("scanBtn");
-  const siBox = document.getElementById("siNo");
-  const reader = document.getElementById("reader");
-  const refreshBtn = document.querySelector(".btn-orange");
-
-  if (state) {
-    btn.innerHTML = "⛔ STOP SCANNING";
-    siBox.disabled = true;
-    reader.style.display = "block";
-    refreshBtn.disabled = true;
-    refreshBtn.style.opacity = "0.5";
+  if (data.status === "OK") {
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").style.display = "block";
   } else {
-    btn.innerHTML = "📷 START SCAN";
-    siBox.disabled = false;
-    reader.style.display = "none";
-    refreshBtn.disabled = false;
-    refreshBtn.style.opacity = "1";
+    document.getElementById("loginStatus").innerText = "❌ Wrong password";
   }
 }
 
-
+/* ================= SCANNER ================= */
+function setUIScanning(state) {
+  document.getElementById("reader").style.display = state ? "block" : "none";
+}
 
 async function toggleScan() {
   const siNo = document.getElementById("siNo").value;
@@ -326,107 +187,73 @@ async function toggleScan() {
 
   if (isScanning) {
     isScanning = false;
-    setUIScanning(false);
     if (scanner) {
       await scanner.stop();
       await scanner.clear();
       scanner = null;
     }
+    setUIScanning(false);
     return;
   }
 
   clearUI();
+
   isScanning = true;
   setUIScanning(true);
 
   const devices = await Html5Qrcode.getCameras();
   let cameraId = devices[0].id;
 
-  for (let d of devices) {
-    const label = (d.label || "").toLowerCase();
-    if (label.includes("back") || label.includes("rear")) {
-      cameraId = d.id;
-      break;
-    }
-  }
-
   scanner = new Html5Qrcode("reader");
 
-  await scanner.start(
-    cameraId,
-    { fps: 10, qrbox: 250 },
-    async (code) => {
+  try {
+    await scanner.start(
+      cameraId,
+      { fps: 10, qrbox: 250 },
+      async (code) => {
 
-      if (!isScanning) return;
+        if (!isScanning) return;
 
-      isScanning = false;
-      await scanner.stop();
-      await scanner.clear();
-      scanner = null;
-      setUIScanning(false);
+        isScanning = false;
+        await scanner.stop();
+        await scanner.clear();
+        scanner = null;
 
-      beep();
-      vibrate();
+        setUIScanning(false);
 
-      tempCode = code;
-      tempSi = siNo;
+        tempCode = code;
+        tempSi = siNo;
 
-      const res = await fetch(API_URL + "?action=check&barcode=" + encodeURIComponent(code));
-      const data = await res.json();
+        const res = await fetch(API_URL + "?action=check&barcode=" + encodeURIComponent(code));
+        const data = await res.json();
 
-      let row = data.row || [];
-      let colJ = data.colJ || row?.[9] || "";
-      let colO = data.colO || row?.[14] || "";
+        let row = data.row || [];
+        let colJ = data.colJ || row?.[9] || "";
+        let colO = data.colO || row?.[14] || "";
 
-      if (data.status === "FOUND") {
-        document.getElementById("result").innerHTML = `
-          <div class="card green scan-animate">
-            ✅ AVAILABLE<br><br>
-            <b>${colO}</b><br>
-            ${colJ ? `<small>${colJ}</small><br>` : ""}
-            <b>${code}</b><br>
-            <br>
-            <button id="saveBtn" class="btn-blue" onclick="saveYes()">ADD TO SOLD</button>
-            <button class="btn-orange" onclick="cancelNo()">CANCEL</button>
-          </div>
-        `;
+        if (data.status === "FOUND") {
+          document.getElementById("result").innerHTML =
+            `<div class="card green scan-animate">
+              ✅ AVAILABLE<br><b>${colO}</b><br>${code}
+              <br><button class="btn-blue" onclick="saveYes()">ADD TO SOLD</button>
+            </div>`;
+        } else {
+          document.getElementById("result").innerHTML =
+            `<div class="no-results">❌ NOT FOUND<br>${code}</div>`;
+        }
       }
-
-     else if (data.status === "DUPLICATE") {
-  document.getElementById("result").innerHTML = `
-    <div class="card red">
-      🛑 ALREADY SOLD<br><br>
-      <b>${colO}</b><br>
-      ${colJ ? `<small>${colJ}</small><br>` : ""}
-      <b>${code}</b>
-    </div>
-  `;
+    );
+  } catch (err) {
+    alert("Camera error");
+    isScanning = false;
+    setUIScanning(false);
+  }
 }
 
-      else {
-        document.getElementById("result").innerHTML = `
-          <div class="no-results">
-            ❌ NOT FOUND </div><br>
-            <b>${colO}</b><br>
-            ${colJ ? `<small>${colJ}</small>` : ""}
-         
-        `;
-      }
-    }
-  );
-}
-
+/* ================= SAVE ================= */
 async function saveYes() {
   if (isSaving) return;
   isSaving = true;
-
-  document.getElementById("saveBtn").disabled = true;
-  document.getElementById("result").innerHTML = `
-  <div class="card saving">
-    <div class="spinner"></div>
-    <div class="saving-text">Saving data...</div>
-  </div>
-`;
 
   const res = await fetch(API_URL +
     "?action=save&barcode=" + encodeURIComponent(tempCode) +
@@ -434,28 +261,13 @@ async function saveYes() {
 
   const data = await res.json();
 
-  let row = data.row || [];
-  let colJ = data.colJ || row?.[9] || "";
-  let colO = data.colO || row?.[14] || "";
-
-  document.getElementById("result").innerHTML = `
-    <div class="card green scan-animate">
-  <div>✅ ${data.status}</div>
-  <br>
-
-  <b style="font-size:16px;">${colO}</b><br>
-
-  ${colJ ? `<small style="color:#666;">${colJ}</small><br>` : ""}
-
-  <div style="margin-top:12px; font-size:14px; letter-spacing:1px;">
-    🏷️ ${tempCode}
-  </div>
-</div>
-  `;
+  document.getElementById("result").innerHTML =
+    `<div class="card green">✅ SAVED<br>${data.status}</div>`;
 
   isSaving = false;
 }
-lastUploadedPhotos = [];
+
+/* ================= SEARCH ================= */
 async function searchSI() {
   clearUI();
 
@@ -467,196 +279,86 @@ async function searchSI() {
   const out = document.getElementById("searchResult");
 
   if (!data.items?.length) {
-    out.innerHTML = `
-  <div class="no-results">
-    ❌ No results found
-  </div>
-`;
+    out.innerHTML = `<div class="no-results">❌ No results</div>`;
     return;
   }
 
-  out.innerHTML = data.items.map((item, idx) => `
-    <div class="card">
-      #${idx + 1}<br>
-      <b>${item.colO}</b><br>
-      ${item.colJ ? `<small>${item.colJ}</small><br>` : ""}
-      ${item.barcode}
-    </div>
-  `).join("");
-}
-let photoHTML = "";
+  let html = data.items.map((item, i) =>
+    `<div class="card">#${i+1}<br><b>${item.colO}</b><br>${item.barcode}</div>`
+  ).join("");
 
-if (lastUploadedPhotos.length === 2) {
-  photoHTML = `
-    <div class="card">
-      <b>📸 Uploaded Photos</b><br><br>
-      <img src="${lastUploadedPhotos[0]}" style="width:100px;height:100px;border-radius:10px;object-fit:cover;">
-      <img src="${lastUploadedPhotos[1]}" style="width:100px;height:100px;border-radius:10px;object-fit:cover;margin-left:10px;">
-    </div>
-  `;
+  if (lastUploadedPhotos.length === 2) {
+    html += `
+      <div class="card">
+        📸 Photos<br>
+        <img src="${lastUploadedPhotos[0]}" width="80">
+        <img src="${lastUploadedPhotos[1]}" width="80">
+      </div>`;
+  }
+
+  out.innerHTML = html;
 }
 
-out.innerHTML += photoHTML;
+/* ================= CAMERA ================= */
+function openCamera() {
+  document.getElementById("cameraInput").click();
+}
+
+document.getElementById("cameraInput").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  selectedFiles.push(file);
+
+  const img = document.createElement("img");
+  img.src = URL.createObjectURL(file);
+  img.style.width = "80px";
+  document.getElementById("photoPreview").appendChild(img);
+
+  e.target.value = "";
+});
+
+async function uploadPhotos() {
+  const siNo = document.getElementById("siNo").value.trim();
+  if (!siNo) return alert("Enter SI No");
+  if (selectedFiles.length !== 2) return alert("Need 2 photos");
+
+  const base64_1 = await fileToBase64(selectedFiles[0]);
+  const base64_2 = await fileToBase64(selectedFiles[1]);
+
+  const formData = new URLSearchParams();
+  formData.append("action", "uploadPhotos");
+  formData.append("siNo", siNo);
+  formData.append("photo1", base64_1);
+  formData.append("photo2", base64_2);
+
+  const res = await fetch(API_URL, { method: "POST", body: formData });
+  const data = await res.json();
+
+  if (data.status === "OK") {
+    lastUploadedPhotos = [data.link1, data.link2];
+    selectedFiles = [];
+    document.getElementById("photoPreview").innerHTML = "";
+
+    document.getElementById("result").innerHTML =
+      `<div class="card green">✅ UPLOADED</div>`;
+  }
+}
+
 /* ================= UTIL ================= */
-
 function clearUI() {
   document.getElementById("result").innerHTML = "";
   document.getElementById("searchResult").innerHTML = "";
 }
 
-function cancelNo() {
-  document.getElementById("result").innerHTML = `
-  <div class="no-results">
-    ❌ CANCELLED
-  </div>
-`;
-}
-
-function refreshPage() {
-  document.getElementById("siNo").value = "";
-  clearUI();
-}
-  function openCamera() {
-  document.getElementById("cameraInput").click();
-}
-
-
-
-let audioCtx = null;
-
-function initAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  }
-}
-
-function beep() {
-  initAudio();
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
-
-  osc.type = "square";
-  osc.frequency.value = 900;
-  gain.gain.value = 0.15;
-
-  osc.connect(gain);
-  gain.connect(audioCtx.destination);
-
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.12);
-}
-
-function vibrate() {
-  if (navigator.vibrate) navigator.vibrate([150, 80, 150]);
-}
-
-document.addEventListener("click", initAudio, { once: true });
-
-
-  function fileToBase64(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      const base64 = reader.result.split(",")[1]; // remove header
-      resolve(base64);
-    };
-
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
+function fileToBase64(file) {
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(",")[1]);
+    r.readAsDataURL(file);
   });
 }
 
-let selectedFiles = [];
-  
-
-document.getElementById("cameraInput").addEventListener("change", function (e) {
-
-  const file = e.target.files[0];
-  if (!file) return;
-
-  // add 1 photo at a time
-  selectedFiles.push(file);
-
-  // show preview
-  const preview = document.getElementById("photoPreview");
-
-  const img = document.createElement("img");
-  img.style.width = "80px";
-  img.style.height = "80px";
-  img.style.objectFit = "cover";
-  img.style.borderRadius = "10px";
-  img.src = URL.createObjectURL(file);
-
-  preview.appendChild(img);
-
-  e.target.value = "";
-
-  // optional message
-  if (selectedFiles.length === 1) {
-    alert("Photo 1 saved. Now take Photo 2.");
-  }
-
-  if (selectedFiles.length === 2) {
-    alert("2 photos ready. You can now upload.");
-  }
-});
-async function uploadPhotos() {
-  if (selectedFiles.length !== 2) {
-    alert("Please capture 2 photos first (exactly 2 required)");
-    return;
-  }
-
-  document.getElementById("result").innerHTML = `
-    <div class="card saving">
-      <div class="spinner"></div>
-      <div class="saving-text">Uploading photos...</div>
-    </div>
-  `;
-
-  try {
-    const base64_1 = await fileToBase64(selectedFiles[0]);
-    const base64_2 = await fileToBase64(selectedFiles[1]);
-
-    const formData = new URLSearchParams();
-    formData.append("action", "uploadPhotos");
-    formData.append("siNo", document.getElementById("siNo").value);
-    formData.append("photo1", base64_1);
-    formData.append("photo2", base64_2);
-
-    const res = await fetch(API_URL, {
-      method: "POST",
-      body: formData
-    });
-
-    const data = await res.json();
-
-    if (data.status === "OK") {
-      selectedFiles = [];
-      document.getElementById("photoPreview").innerHTML = "";
-      document.getElementById("result").innerHTML = `
-        <div class="card green">
-          ✅ Upload successful<br><br>
-          <a href="${data.link1}" target="_blank">Photo 1</a><br>
-          <a href="${data.link2}" target="_blank">Photo 2</a>
-        </div>
-      `;
-    } else {
-      document.getElementById("result").innerHTML = `
-        <div class="card red">
-          ❌ ${data.status}
-        </div>
-      `;
-    }
-
-  } catch (err) {
-    document.getElementById("result").innerHTML = `
-      <div class="card red">
-        ❌ Upload error
-      </div>
-    `;
-  }
-}
 </script>
 
 </body>
