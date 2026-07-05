@@ -560,15 +560,16 @@ document.getElementById("cameraInput").addEventListener("change", function (e) {
 
   const newFiles = Array.from(e.target.files);
 
-  // ADD instead of replace (IMPORTANT)
-  selectedFiles = selectedFiles.concat(newFiles);
+  selectedFiles.push(...newFiles);
 
-  // keep only last 2 photos
-  if (selectedFiles.length > 2) {
-    selectedFiles = selectedFiles.slice(-2);
-  }
+if (selectedFiles.length < 2) {
+  alert("Please capture 2 photos");
+  return;
+}
 
   const preview = document.getElementById("photoPreview");
+
+  // IMPORTANT: rebuild cleanly
   preview.innerHTML = "";
 
   selectedFiles.forEach(file => {
@@ -581,10 +582,13 @@ document.getElementById("cameraInput").addEventListener("change", function (e) {
     preview.appendChild(img);
   });
 
+  e.target.value = "";
+});
+
   // reset input so same file can be selected again
   e.target.value = "";
 });
-});
+
   async function uploadPhotos() {
   if (selectedFiles.length !== 2) {
     alert("Please select exactly 2 photos");
