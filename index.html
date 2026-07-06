@@ -47,6 +47,16 @@ body {
   overflow: hidden;
 }
 
+/* INPUT */
+input {
+  padding: 14px;
+  width: 100%;
+  font-size: 16px;
+  border-radius: 12px;
+  border: none;
+  margin-top: 12px;
+}
+
 /* BUTTONS */
 button {
   padding: 14px;
@@ -94,8 +104,7 @@ button:active {
 .red {
   border-left: 6px solid #e74c3c;
 }
-
-/* SAVING CARD */
+  /* SAVING CARD */
 .saving {
   border-left: 6px solid #2196f3;
   text-align: center;
@@ -116,19 +125,20 @@ button:active {
   animation: spin 0.8s linear infinite;
 }
 
+/* TEXT STYLE */
 .saving-text {
   font-size: 16px;
   letter-spacing: 0.5px;
 }
 
+/* ANIMATION */
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
 }
 
-/* NO RESULTS */
-.no-results {
+  .no-results {
   text-align: center;
   margin-top: 20px;
   padding: 20px;
@@ -137,14 +147,28 @@ button:active {
   background: white;
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+  animation: fadeIn 0.3s ease-in-out;
 }
 
-/* SCAN SUCCESS ANIMATION */
+/* optional smooth appearance */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+  /* SCAN SUCCESS ANIMATION CARD */
 .scan-animate {
   animation: popIn 0.35s ease-out, glow 1s ease-in-out;
   transform-origin: center;
 }
 
+/* POP IN EFFECT */
 @keyframes popIn {
   from {
     transform: scale(0.8);
@@ -156,6 +180,7 @@ button:active {
   }
 }
 
+/* GLOW EFFECT */
 @keyframes glow {
   0% {
     box-shadow: 0 0 0 rgba(46, 204, 113, 0);
