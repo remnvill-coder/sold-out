@@ -213,12 +213,23 @@ button:active {
 
   <h2>🔐 SYSTEM LOGIN</h2>
 
-  <input id="password" type="password" placeholder="Enter Password"
-    style="padding:14px; width:80%; max-width:300px; border-radius:10px; border:none;">
+<input id="email" placeholder="Enter Gmail">
 
-  <button class="btn-blue" style="width:80%; max-width:300px;" onclick="login()">
-    LOGIN
-  </button>
+<button class="btn-blue" onclick="sendOTP()">
+SEND OTP
+</button>
+
+
+<input id="otp" placeholder="Enter OTP"
+style="display:none">
+
+
+<button id="verifyBtn" 
+class="btn-blue"
+style="display:none"
+onclick="verifyOTP()">
+VERIFY OTP
+</button>
 
   <p id="loginStatus"></p>
 </div>
@@ -255,33 +266,74 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwydla1ZqbrOKcd4lnG6Z1o4TmzImVd6Cmkdby-G-ahAT6yJpUEsXgbG0U3VlyDOB7uiQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzfQ1nivWi79qLujVJq4U332IWyJSITW-ANS6xeZDxkphJyw7SvIgjTxU-wm_hr-S07AQ/exec";
 
 /* ================= LOGIN ================= */
-async function login() {
-  const pass = document.getElementById("password").value;
+async function sendOTP(){
 
-  if (!pass) {
-    document.getElementById("loginStatus").innerText = "Enter password";
-    return;
-  }
+const email=document.getElementById("email").value;
 
-  document.getElementById("loginStatus").innerText = "Checking...";
 
-  try {
-    const res = await fetch(API_URL + "?action=login&password=" + encodeURIComponent(pass));
-    const data = await res.json();
+const res=await fetch(
+API_URL+
+"?action=sendOTP&email="+encodeURIComponent(email)
+);
 
-    if (data.status === "OK") {
-      document.getElementById("loginScreen").style.display = "none";
-      document.getElementById("app").style.display = "block";
-    } else {
-      document.getElementById("loginStatus").innerText = "❌ Wrong password";
-    }
 
-  } catch (err) {
-    document.getElementById("loginStatus").innerText = "Server error";
-  }
+const data=await res.json();
+
+
+if(data.status==="OTP_SENT"){
+
+document.getElementById("loginStatus").innerText=
+"OTP sent to Gmail";
+
+
+document.getElementById("otp").style.display="block";
+document.getElementById("verifyBtn").style.display="block";
+
+}
+else{
+
+document.getElementById("loginStatus").innerText=
+"❌ Gmail not allowed";
+
+}
+
+}
+
+
+
+async function verifyOTP(){
+
+const email=document.getElementById("email").value;
+const otp=document.getElementById("otp").value;
+
+
+const res=await fetch(
+API_URL+
+"?action=verifyOTP"+
+"&email="+encodeURIComponent(email)+
+"&otp="+encodeURIComponent(otp)
+);
+
+
+const data=await res.json();
+
+
+if(data.status==="OK"){
+
+document.getElementById("loginScreen").style.display="none";
+document.getElementById("app").style.display="block";
+
+}
+else{
+
+document.getElementById("loginStatus").innerText=
+"❌ Wrong OTP";
+
+}
+
 }
 
 
