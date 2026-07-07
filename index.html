@@ -255,7 +255,7 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwpeyJLOGjzBbhkv7gxdLKgnXOdUYCPG77aFT04EAn24_sdPqzyYPrTZNwULk8ak6B1TQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxDdzTOyWcybaqyJVas0VWNbjbyZ_tAgDVWsCE3Y7z9_IDBBrRP0PUwHfSpd9zUCxhbZA/exec";
 
 /* ================= LOGIN ================= */
 async function login() {
@@ -272,33 +272,12 @@ async function login() {
     const res = await fetch(API_URL + "?action=login&password=" + encodeURIComponent(pass));
     const data = await res.json();
 
-  if (data.status === "OK") {
-
-  document.getElementById("loginStatus").innerHTML =
-      "Welcome " + data.email;
-
-  document.getElementById("loginScreen").style.display = "none";
-  document.getElementById("app").style.display = "block";
-
-}
-else if (data.status === "ACCESS_DENIED") {
-
-  document.getElementById("loginStatus").innerHTML =
-      "❌ Google account is not allowed.";
-
-}
-else if (data.status === "LOGIN_REQUIRED") {
-
-  document.getElementById("loginStatus").innerHTML =
-      "Please sign in to your Google account.";
-
-}
-else {
-
-  document.getElementById("loginStatus").innerHTML =
-      "❌ Wrong password";
-
-}
+    if (data.status === "OK") {
+      document.getElementById("loginScreen").style.display = "none";
+      document.getElementById("app").style.display = "block";
+    } else {
+      document.getElementById("loginStatus").innerText = "❌ Wrong password";
+    }
 
   } catch (err) {
     document.getElementById("loginStatus").innerText = "Server error";
