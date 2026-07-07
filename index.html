@@ -473,6 +473,7 @@ if(data.status==="OK"){
   
 localStorage.setItem("inventoryLoggedIn", "true");
 localStorage.setItem("inventoryEmail", email);
+  localStorage.setItem("loginTime", Date.now());
 
 document.getElementById("loginScreen").style.display="none";
 document.getElementById("app").style.display="block";
@@ -739,14 +740,28 @@ document.addEventListener("click", initAudio, { once: true });
 
 window.addEventListener("DOMContentLoaded", function () {
 
-    if(localStorage.getItem("inventoryLoggedIn") === "true"){
+    const loggedIn = localStorage.getItem("inventoryLoggedIn") === "true";
+    const loginTime = Number(localStorage.getItem("loginTime"));
+
+    // 12 hours in milliseconds
+    const SESSION_TIME = 10 * 1000;
+
+    if (
+        loggedIn &&
+        loginTime &&
+        (Date.now() - loginTime) < SESSION_TIME
+    ) {
 
         document.getElementById("app").style.display = "block";
 
     } else {
 
-        document.getElementById("loginScreen").style.display = "flex";
+        // Session expired
+        localStorage.removeItem("inventoryLoggedIn");
+        localStorage.removeItem("inventoryEmail");
+        localStorage.removeItem("loginTime");
 
+        document.getElementById("loginScreen").style.display = "flex";
     }
 
 });
