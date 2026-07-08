@@ -412,7 +412,19 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbwTJwYgJtvCSaH2fKJiXpfyXieWK6EI9Xf3dL63DfZ-1KBv__Kr6ztoONOZs5Rc2vonyA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyh4gKblgghO1GEbbnlien4yrQh37kGSWmSZASREiBMcsHiFhIGtU7NYGnZb7_LiVg7ew/exec";
+
+  function getSessionParams(){
+
+  const email = localStorage.getItem("inventoryEmail");
+  const sessionId = localStorage.getItem("sessionId");
+
+  return (
+    "&email=" + encodeURIComponent(email) +
+    "&sessionId=" + encodeURIComponent(sessionId)
+  );
+
+}
 
 /* ================= LOGIN ================= */
 async function sendOTP(){
@@ -429,51 +441,42 @@ API_URL+
 const data=await res.json();
 
 
-async function sendOTP(){
 
-    ...
-
-    const data = await res.json();
 
     // <-- THIS BLOCK
-    if(data.status==="OTP_SENT"){
+   if (data.status === "OTP_SENT") {
+
+    if (data.alreadyLoggedIn) {
+
+        document.getElementById("loginStatus").innerHTML =
+            "⚠ Gmail is already logged in.<br>Enter the OTP to force logout the other device.";
+
+    } else {
 
         document.getElementById("loginStatus").innerText =
-        "✅ OTP sent to Gmail";
-
-        document.getElementById("otp").style.display="block";
-        document.getElementById("verifyBtn").style.display="block";
+            "✅ OTP sent to Gmail";
 
     }
 
-    else if(data.status==="ALREADY_LOGGED_IN"){
-        ...
-    }
-}
-else if(data.status==="ALREADY_LOGGED_IN"){
-
-  document.getElementById("loginStatus").innerText =
-  "❌ Gmail is already logged in";
+    document.getElementById("otp").style.display = "block";
+    document.getElementById("verifyBtn").style.display = "block";
 
 }
+else if (data.status === "EMAIL_DENIED") {
 
-else if(data.status==="EMAIL_DENIED"){
-
-  document.getElementById("loginStatus").innerText =
-  "❌ Gmail not allowed.";
+    document.getElementById("loginStatus").innerText =
+        "❌ Gmail not allowed.";
 
 }
+else {
 
-else{
-
-  document.getElementById("loginStatus").innerText =
-  "❌ Login error.";
+    document.getElementById("loginStatus").innerText =
+        "❌ Login error.";
 
 }
 
 }
-
-
+  
 
 async function verifyOTP(){
 
@@ -625,7 +628,12 @@ async function toggleScan() {
       tempCode = code;
       tempSi = siNo;
 
-      const res = await fetch(API_URL + "?action=check&barcode=" + encodeURIComponent(code));
+      const res = await fetch(
+  API_URL +
+  "?action=check" +
+  "&barcode=" + encodeURIComponent(code) +
+  getSessionParams()
+);
       const data = await res.json();
 
       let row = data.row || [];
@@ -682,9 +690,13 @@ async function saveYes() {
   </div>
 `;
 
-  const res = await fetch(API_URL +
-    "?action=save&barcode=" + encodeURIComponent(tempCode) +
-    "&siNo=" + encodeURIComponent(tempSi));
+  const res = await fetch(
+  API_URL +
+  "?action=save" +
+  "&barcode=" + encodeURIComponent(tempCode) +
+  "&siNo=" + encodeURIComponent(tempSi) +
+  getSessionParams()
+);
 
   const data = await res.json();
 
@@ -715,7 +727,12 @@ async function searchSI() {
 
   const siNo = document.getElementById("siNo").value;
 
-  const res = await fetch(API_URL + "?action=searchSI&siNo=" + encodeURIComponent(siNo));
+  const res = await fetch(
+  API_URL +
+  "?action=searchSI" +
+  "&siNo=" + encodeURIComponent(siNo) +
+  getSessionParams()
+);
   const data = await res.json();
 
   const out = document.getElementById("searchResult");
