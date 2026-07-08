@@ -412,7 +412,7 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyStBLYWe0dJUAcB-a3tVwhfPpHe0s9Vs3wk1peJZvsPkzoiljgnQIjpltHEqgYFPk4Sw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwTJwYgJtvCSaH2fKJiXpfyXieWK6EI9Xf3dL63DfZ-1KBv__Kr6ztoONOZs5Rc2vonyA/exec";
 
 /* ================= LOGIN ================= */
 async function sendOTP(){
@@ -429,16 +429,27 @@ API_URL+
 const data=await res.json();
 
 
-if(data.status==="OTP_SENT"){
+async function sendOTP(){
 
-  document.getElementById("loginStatus").innerText =
-  "✅ OTP sent to Gmail";
+    ...
 
-  document.getElementById("otp").style.display="block";
-  document.getElementById("verifyBtn").style.display="block";
+    const data = await res.json();
 
+    // <-- THIS BLOCK
+    if(data.status==="OTP_SENT"){
+
+        document.getElementById("loginStatus").innerText =
+        "✅ OTP sent to Gmail";
+
+        document.getElementById("otp").style.display="block";
+        document.getElementById("verifyBtn").style.display="block";
+
+    }
+
+    else if(data.status==="ALREADY_LOGGED_IN"){
+        ...
+    }
 }
-
 else if(data.status==="ALREADY_LOGGED_IN"){
 
   document.getElementById("loginStatus").innerText =
@@ -496,16 +507,46 @@ if (data.status === "OK") {
 }
 else if (data.status === "ALREADY_LOGGED_IN") {
 
-  document.getElementById("loginStatus").innerText =
-    "❌ This account is already logged in on another device.";
+  const force = confirm(
+    "This Gmail is already logged in on another device.\n\nDo you want to force logout the other device?"
+  );
+
+  if (force) {
+    forceLogin();
+  }
 
 }
-else {
-
-  document.getElementById("loginStatus").innerText =
-    "❌ Wrong or expired OTP";
-
 }
+
+  async function forceLogin() {
+
+  const email = document.getElementById("email").value;
+  const otp = document.getElementById("otp").value;
+
+  const res = await fetch(
+    API_URL +
+    "?action=forceLogin" +
+    "&email=" + encodeURIComponent(email) +
+    "&otp=" + encodeURIComponent(otp)
+  );
+
+  const data = await res.json();
+
+  if (data.status === "OK") {
+
+    localStorage.setItem("inventoryLoggedIn", "true");
+    localStorage.setItem("inventoryEmail", email);
+    localStorage.setItem("loginTime", Date.now());
+    localStorage.setItem("sessionId", data.sessionId);
+
+    document.getElementById("loginScreen").style.display = "none";
+    document.getElementById("app").style.display = "block";
+
+  } else {
+
+    alert("Force login failed. Please request a new OTP.");
+
+  }
 
 }
 
