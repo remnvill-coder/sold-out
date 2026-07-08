@@ -769,7 +769,17 @@ window.addEventListener("DOMContentLoaded", async function(){
   const sessionId = localStorage.getItem("sessionId");
 
 
-  if(email && sessionId){
+  // NO SAVED LOGIN
+  if(!email || !sessionId){
+
+    document.getElementById("loginScreen").style.display="flex";
+    document.getElementById("app").style.display="none";
+
+    return;
+  }
+
+
+  try {
 
     const res = await fetch(
       API_URL +
@@ -784,21 +794,36 @@ window.addEventListener("DOMContentLoaded", async function(){
 
     if(data.status === "VALID"){
 
+      // KEEP LOGIN
       document.getElementById("loginScreen").style.display="none";
       document.getElementById("app").style.display="block";
 
-      return;
+    }
+    else {
+
+      // ONLY REMOVE IF SERVER REALLY SAYS INVALID
+      localStorage.removeItem("inventoryLoggedIn");
+      localStorage.removeItem("inventoryEmail");
+      localStorage.removeItem("loginTime");
+      localStorage.removeItem("sessionId");
+
+
+      document.getElementById("loginScreen").style.display="flex";
+      document.getElementById("app").style.display="none";
 
     }
 
+
+  } catch(error){
+
+    console.log("Session check failed:", error);
+
+
+    // KEEP USER LOGGED IN IF INTERNET TEMPORARILY FAILS
+    document.getElementById("loginScreen").style.display="none";
+    document.getElementById("app").style.display="block";
+
   }
-
-
-  // INVALID SESSION
-  localStorage.clear();
-
-  document.getElementById("loginScreen").style.display="flex";
-  document.getElementById("app").style.display="none";
 
 
 });
