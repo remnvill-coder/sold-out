@@ -412,7 +412,7 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxS6ScXUlyXlehiIGnOXJwyqNsTp8edJes984D6l9EABrBi2dl6cNfTElVzaYr7U0lwcw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzo8ahdl6rvya2LTuVQdbQ_2rKi-5Xmj9HtZJzUNwrEaUsntBe0fCugchMJNWzKLpPXCA/exec";
 
 /* ================= LOGIN ================= */
 async function sendOTP(){
@@ -467,20 +467,29 @@ API_URL+
 const data=await res.json();
 
 
-if(data.status==="OK"){
-  
-localStorage.setItem("inventoryLoggedIn", "true");
-localStorage.setItem("inventoryEmail", email);
+if (data.status === "OK") {
+
+  localStorage.setItem("inventoryLoggedIn", "true");
+  localStorage.setItem("inventoryEmail", email);
   localStorage.setItem("loginTime", Date.now());
 
-document.getElementById("loginScreen").style.display="none";
-document.getElementById("app").style.display="block";
+  // Save the session ID returned by Apps Script
+  localStorage.setItem("sessionId", data.sessionId);
+
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("app").style.display = "block";
 
 }
-else{
+else if (data.status === "ALREADY_LOGGED_IN") {
 
-document.getElementById("loginStatus").innerText=
-"❌ Wrong OTP";
+  document.getElementById("loginStatus").innerText =
+    "❌ This account is already logged in on another device.";
+
+}
+else {
+
+  document.getElementById("loginStatus").innerText =
+    "❌ Wrong or expired OTP";
 
 }
 
@@ -727,12 +736,30 @@ function vibrate() {
 
 document.addEventListener("click", initAudio, { once: true });
 
-  function logout() {
+async function logout() {
 
-    localStorage.removeItem("inventoryLoggedIn");
-    localStorage.removeItem("inventoryEmail");
+  const email = localStorage.getItem("inventoryEmail");
+  const sessionId = localStorage.getItem("sessionId");
 
-    location.reload();
+  try {
+
+    await fetch(
+      API_URL +
+      "?action=logout" +
+      "&email=" + encodeURIComponent(email) +
+      "&sessionId=" + encodeURIComponent(sessionId)
+    );
+
+  } catch (e) {
+    console.log(e);
+  }
+
+  localStorage.removeItem("inventoryLoggedIn");
+  localStorage.removeItem("inventoryEmail");
+  localStorage.removeItem("loginTime");
+  localStorage.removeItem("sessionId");
+
+  location.reload();
 
 }
 
@@ -758,6 +785,7 @@ window.addEventListener("DOMContentLoaded", function () {
         localStorage.removeItem("inventoryLoggedIn");
         localStorage.removeItem("inventoryEmail");
         localStorage.removeItem("loginTime");
+      localStorage.removeItem("sessionId");
 
         document.getElementById("loginScreen").style.display = "flex";
     }
