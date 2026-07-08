@@ -907,7 +907,37 @@ async function logout() {
 
 }
 
+function checkLoginExpiry(){
+
+  const loginTime = localStorage.getItem("loginTime");
+
+  if(!loginTime){
+    return;
+  }
+
+  const now = Date.now();
+
+  const maxTime = 13 * 60 * 60 * 1000; // 8 hours
+
+  if(now - Number(loginTime) > maxTime){
+
+    localStorage.removeItem("inventoryLoggedIn");
+    localStorage.removeItem("inventoryEmail");
+    localStorage.removeItem("loginTime");
+    localStorage.removeItem("sessionId");
+
+    alert("Session expired. Please login again.");
+
+    location.reload();
+
+  }
+
+}
+  
+
 window.addEventListener("DOMContentLoaded", async function(){
+
+  checkLoginExpiry();
 
   const email = localStorage.getItem("inventoryEmail");
   const sessionId = localStorage.getItem("sessionId");
