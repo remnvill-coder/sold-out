@@ -467,7 +467,7 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbzTIqJLmzQRhT5B316s6Qr1VdkHC7BCu2aM1TwTmWO4bDv9o_hU2yOjfWgDVmFUNQpnaw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzUAmwYWYfRjNaXFBaFTOEOduK4IR7TkdP5ki2bM_gD0NKppm0joE7nsUiy_5MVgy1H/exec";
 
  function getSessionParams(){
 
@@ -518,7 +518,14 @@ function checkReportAccess(){
 /* ================= LOGIN ================= */
 async function sendOTP(){
 
-const email=document.getElementById("email").value;
+try {
+
+const email=document.getElementById("email").value.trim();
+
+if(!email){
+  alert("Enter Gmail");
+  return;
+}
 
 
 const res=await fetch(
@@ -530,62 +537,76 @@ API_URL+
 const data=await res.json();
 
 
+if (data.status === "OTP_SENT") {
 
-
-    // <-- THIS BLOCK
-   if (data.status === "OTP_SENT") {
 
     if (data.alreadyLoggedIn) {
 
-document.getElementById("loginStatus").innerHTML =
-`
-<div class="login-warning">
-⚠ Account already logged in.<br><br>
+      document.getElementById("loginStatus").innerHTML =
+      `
+      <div class="login-warning">
+      ⚠ Account already logged in.<br><br>
 
-<button 
-onclick="forceLogin()"
-style="
-background:#ff9800;
-color:white;
-padding:10px 20px;
-border:none;
-border-radius:10px;
-font-weight:bold;
-cursor:pointer;
-">
-FORCE LOGOUT OTHER DEVICE
-</button>
+      <button 
+      onclick="forceLogin()"
+      style="
+      background:#ff9800;
+      color:white;
+      padding:10px 20px;
+      border:none;
+      border-radius:10px;
+      font-weight:bold;
+      cursor:pointer;
+      ">
+      FORCE LOGOUT OTHER DEVICE
+      </button>
 
-</div>
-`;
+      </div>
+      `;
 
     } else {
 
-        document.getElementById("loginStatus").innerText =
-            "✅ OTP sent to Gmail";
+      document.getElementById("loginStatus").innerText =
+      "✅ OTP sent to Gmail";
 
     }
+
 
     document.getElementById("otp").style.display = "block";
     document.getElementById("verifyBtn").style.display = "block";
 
+
 }
-else if (data.status === "EMAIL_DENIED") {
+else if(data.status === "EMAIL_DENIED"){
 
     document.getElementById("loginStatus").innerText =
-        "❌ Gmail not allowed.";
+    "❌ Gmail not allowed.";
 
 }
-else {
+else{
 
     document.getElementById("loginStatus").innerText =
-        "❌ Login error.";
+    "❌ Login error.";
+
+}
+
+
+}
+catch(err){
+
+document.getElementById("loginStatus").innerHTML =
+`
+<div style="color:red">
+❌ ERROR:<br>
+${err}
+</div>
+`;
+
+console.log(err);
 
 }
 
 }
-  
-
 async function verifyOTP(){
 
 const email=document.getElementById("email").value;
