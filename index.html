@@ -374,12 +374,224 @@ button:active {
   }
 
 }
+
+  /* ================= REPORT DIALOG ================= */
+
+.report-overlay{
+
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+
+display:none;
+justify-content:center;
+align-items:center;
+
+background:rgba(0,0,0,.45);
+backdrop-filter:blur(6px);
+
+z-index:99999;
+
+animation:fadeReport .25s;
+}
+
+@keyframes fadeReport{
+
+from{
+opacity:0;
+}
+
+to{
+opacity:1;
+}
+
+}
+
+.report-modal{
+
+width:360px;
+max-width:92%;
+
+background:#fff;
+
+border-radius:22px;
+
+padding:25px;
+
+box-shadow:0 20px 45px rgba(0,0,0,.25);
+
+animation:popReport .25s;
+}
+
+@keyframes popReport{
+
+from{
+
+transform:scale(.85);
+opacity:0;
+
+}
+
+to{
+
+transform:scale(1);
+opacity:1;
+
+}
+
+}
+
+.report-title{
+
+font-size:24px;
+font-weight:bold;
+color:#1976d2;
+
+text-align:center;
+
+}
+
+.report-subtitle{
+
+margin-top:8px;
+margin-bottom:22px;
+
+text-align:center;
+color:#777;
+
+}
+
+.recipient-card{
+
+display:flex;
+align-items:center;
+
+padding:16px;
+
+margin-bottom:14px;
+
+border:2px solid #e5e5e5;
+
+border-radius:18px;
+
+cursor:pointer;
+
+transition:.25s;
+
+position:relative;
+
+}
+
+.recipient-card:hover{
+
+transform:translateY(-3px);
+
+box-shadow:0 10px 25px rgba(0,0,0,.12);
+
+}
+
+.recipient-card.selected{
+
+border-color:#2196f3;
+
+background:#eaf4ff;
+
+box-shadow:0 0 20px rgba(33,150,243,.25);
+
+}
+
+.recipient-icon{
+
+width:52px;
+height:52px;
+
+border-radius:50%;
+
+background:#2196f3;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+font-size:24px;
+
+color:#fff;
+
+margin-right:15px;
+
+}
+
+.recipient-name{
+
+font-weight:bold;
+font-size:16px;
+
+}
+
+.recipient-email{
+
+font-size:13px;
+color:#777;
+
+margin-top:3px;
+
+}
+
+.checkmark{
+
+margin-left:auto;
+
+font-size:22px;
+
+color:#2196f3;
+
+opacity:0;
+
+transform:scale(.5);
+
+transition:.25s;
+
+}
+
+.recipient-card.selected .checkmark{
+
+opacity:1;
+
+transform:scale(1);
+
+}
+
+.send-report-btn{
+
+margin-top:10px;
+
+background:linear-gradient(135deg,#2196f3,#1565c0);
+
+color:#fff;
+
+font-size:17px;
+
+}
+
+.cancel-report-btn{
+
+background:#f2f2f2;
+
+color:#555;
+
+margin-top:10px;
+
+}
   
 </style>
 </head>
 
 <body>
 
+
+  
 
 <div id="loginScreen" style="
   position: fixed;
@@ -445,10 +657,10 @@ VERIFY OTP
     <button id="scanBtn" class="btn-blue" onclick="toggleScan()">📷 START SCAN</button>
     <button class="btn-blue" onclick="searchSI()">🔍 SEARCH SI</button>
     <button class="btn-orange" onclick="refreshPage()">♻ REFRESH</button>
-  <button 
+<button
 id="reportBtn"
 class="btn-blue"
-onclick="sendReport()"
+onclick="showReportDialog()"
 style="display:none;">
 📧 SEND REPORT
 </button>
@@ -458,7 +670,79 @@ style="display:none;">
 
   </div>
 </div>
+<div id="reportDialog" class="report-overlay">
 
+    <div class="report-modal">
+
+        <div class="report-title">
+            📧 Send Inventory Report
+        </div>
+
+        <div class="report-subtitle">
+            Choose recipient(s)
+        </div>
+
+        <div class="recipient-card" data-email="remnvill@gmail.com">
+            <div class="recipient-icon">👤</div>
+
+            <div class="recipient-info">
+                <div class="recipient-name">
+                    Remn Vill
+                </div>
+
+                <div class="recipient-email">
+                    remnvill@gmail.com
+                </div>
+            </div>
+
+            <div class="checkmark">✓</div>
+        </div>
+
+        <div class="recipient-card" data-email="willremn@gmail.com">
+            <div class="recipient-icon">👤</div>
+
+            <div class="recipient-info">
+                <div class="recipient-name">
+                    Will Remn
+                </div>
+
+                <div class="recipient-email">
+                    willremn@gmail.com
+                </div>
+            </div>
+
+            <div class="checkmark">✓</div>
+        </div>
+
+        <div class="recipient-card" data-email="dremnvill32@gmail.com">
+            <div class="recipient-icon">👤</div>
+
+            <div class="recipient-info">
+                <div class="recipient-name">
+                    Dremn Vill
+                </div>
+
+                <div class="recipient-email">
+                    dremnvill32@gmail.com
+                </div>
+            </div>
+
+            <div class="checkmark">✓</div>
+        </div>
+
+        <button class="send-report-btn" onclick="sendSelectedReport()">
+            📧 SEND REPORT
+        </button>
+
+        <button class="cancel-report-btn" onclick="closeReportDialog()">
+            CANCEL
+        </button>
+
+    </div>
+
+</div>
+
+  
 <script>
 
 let scanner = null;
@@ -467,7 +751,7 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxe_JtEiZ2wTiOH0pnSINK8i-IZK_2nq-LrHE239gKmPUGGyavy0qsbvJqhNyuMwf0MVQ/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxCfI8GGE3NEJ4MPleLx_bJ1vfq_sB2OugBoKxwhSfh11qqiopdLlTXz7G5otZCnetVOQ/exec";
 
  function getSessionParams(){
 
@@ -1101,54 +1385,96 @@ window.addEventListener("DOMContentLoaded", async function(){
 
 });
 
- async function sendReport() {
+ function showReportDialog() {
 
-  const reportBtn = document.getElementById("reportBtn");
+    document.getElementById("reportDialog").style.display = "flex";
 
-  if(reportBtn){
-    reportBtn.disabled = true;
-    reportBtn.innerHTML = "📧 Sending...";
-  }
+}
 
+function closeReportDialog() {
 
-  try {
+    document.getElementById("reportDialog").style.display = "none";
 
-    const res = await fetch(
-      API_URL +
-      "?action=sendReport" +
-      getSessionParams()
-    );
+}
 
 
-    const data = await res.json();
+// CLICK CARD TO SELECT
+document.querySelectorAll(".recipient-card").forEach(card => {
+
+    card.addEventListener("click", function () {
+
+        this.classList.toggle("selected");
+
+    });
+
+});
 
 
-    if(data.status === "REPORT SENT"){
+async function sendSelectedReport() {
 
-      showReportMessage(
-        "✅ REPORT SENT<br><small>Excel file sent to remnvill@gmail.com</small>"
-      );
+    const selectedCards =
+        document.querySelectorAll(".recipient-card.selected");
+
+    if (selectedCards.length === 0) {
+
+        alert("Please select at least one recipient.");
+
+        return;
 
     }
-    else{
 
-      showReportMessage(
-        "❌ REPORT FAILED"
-      );
+    const emails = [...selectedCards]
+        .map(card => card.dataset.email)
+        .join(",");
+
+
+    closeReportDialog();
+
+
+    showReportMessage(`
+        <div class="spinner"></div>
+        <div class="saving-text">
+            Sending report...
+        </div>
+    `);
+
+
+    try {
+
+        const res = await fetch(
+
+            API_URL +
+            "?action=sendReport" +
+            "&emails=" + encodeURIComponent(emails) +
+            getSessionParams()
+
+        );
+
+        const data = await res.json();
+
+        if (data.status === "REPORT SENT") {
+
+            showReportMessage(`
+                ✅ <b>REPORT SENT</b><br><br>
+                📧 Sent to:<br>
+                <small>${emails.replaceAll(",", "<br>")}</small>
+            `);
+
+        } else {
+
+            showReportMessage("❌ " + data.status);
+
+        }
+
+    } catch (err) {
+
+        showReportMessage("❌ SERVER ERROR");
+
+        console.log(err);
 
     }
 
-
-  } catch(err){
-
-    showReportMessage(
-      "❌ SERVER ERROR"
-    );
-
-    console.log(err);
-
-  }
-
+}
 
   if(reportBtn){
     reportBtn.disabled = false;
@@ -1179,6 +1505,28 @@ window.addEventListener("DOMContentLoaded", async function(){
   `;
 
 }
+
+  function showReportDialog(){
+
+document.getElementById("reportDialog").style.display="flex";
+
+}
+
+function closeReportDialog(){
+
+document.getElementById("reportDialog").style.display="none";
+
+}
+
+document.querySelectorAll(".recipient-card").forEach(card=>{
+
+card.onclick=function(){
+
+this.classList.toggle("selected");
+
+}
+
+});
 </script>
 
 </body>
