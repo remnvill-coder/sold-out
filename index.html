@@ -435,7 +435,10 @@ VERIFY OTP
 
     <button id="scanBtn" class="btn-blue" onclick="toggleScan()">📷 START SCAN</button>
     <button class="btn-blue" onclick="searchSI()">🔍 SEARCH SI</button>
-    <button class="btn-orange" onclick="refreshPage()">♻ REFRESH</button>
+    <button class="btn-orange" onclick="refreshPage()">♻ REFRESH</button>.
+    <button class="btn-blue" onclick="sendReport()">
+    📧 SEND REPORT
+</button>
 
     <p id="result"></p>
     <div id="searchResult"></div>
@@ -451,7 +454,7 @@ let isSaving = false;
 let tempCode = "";
 let tempSi = "";
 
-const API_URL = "https://script.google.com/macros/s/AKfycbxzl6zKYPMuDXyBFcYTNoQq9_UIv6jNO2patRcIYP_VCaX6PwT6_WEuoYvLbUJmZF4uFw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbwFwi7iwAF0uRCiDrxC-EYb0DSOxDvP6kCsvmrHoEqqvWSa9cnRBjJH-vVc0hdfe05kww/exec";
 
   function getSessionParams(){
 
@@ -1001,6 +1004,29 @@ window.addEventListener("DOMContentLoaded", async function(){
 
 
 });
+
+ async function sendReport() {
+
+    try {
+
+        const res = await fetch(
+            API_URL +
+            "?action=sendReport" +
+            getSessionParams()
+        );
+
+        const data = await res.json();
+
+        alert(data.status);
+
+    } catch (err) {
+
+        alert("Unable to contact server.");
+        console.log(err);
+
+    }
+
+}
 </script>
 
 </body>
