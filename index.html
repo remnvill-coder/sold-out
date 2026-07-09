@@ -584,6 +584,16 @@ color:#555;
 margin-top:10px;
 
 }
+  .report-overlay{
+    background:
+    linear-gradient(
+      135deg,
+      rgba(25,118,210,.35),
+      rgba(0,0,0,.55)
+    );
+
+    backdrop-filter: blur(10px);
+}
   
 </style>
 </head>
@@ -669,7 +679,6 @@ style="display:none;">
     <div id="searchResult"></div>
 
   </div>
-</div>
 <div id="reportDialog" class="report-overlay">
 
     <div class="report-modal">
@@ -741,6 +750,9 @@ style="display:none;">
     </div>
 
 </div>
+  
+</div>
+
 
   
 <script>
@@ -1476,12 +1488,6 @@ async function sendSelectedReport() {
 
 }
 
-  if(reportBtn){
-    reportBtn.disabled = false;
-    reportBtn.innerHTML = "📧 SEND REPORT";
-  }
-
-}
 
   function showReportMessage(message){
 
